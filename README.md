@@ -100,3 +100,15 @@ npx shadcn@latest add button
 ```
 
 Liste des composants : https://ui.shadcn.com/docs/components
+
+## Pour déploiement sur Github
+
+```
+npm install -D gh-pages
+```
+
+Puis déploiement pour le déploiement à chaque modif 
+```
+npm run build
+npm run deploy
+```
