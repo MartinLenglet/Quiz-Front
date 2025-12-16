@@ -4,9 +4,7 @@ import type { ThemeWithSignedUrlOut } from "@/features/themes/schemas/theme.sche
 import { NetflixSections, type CategorySection } from "@/features/themes/components/NetflixSections";
 import type { RowItem } from "@/features/themes/components/CategoryRow";
 
-// Grouping helper
 function buildSections(themes: ThemeWithSignedUrlOut[]): CategorySection[] {
-  // group by category_id (null -> 0)
   const map = new Map<number, ThemeWithSignedUrlOut[]>();
 
   for (const t of themes) {
@@ -16,25 +14,28 @@ function buildSections(themes: ThemeWithSignedUrlOut[]): CategorySection[] {
     else map.set(catId, [t]);
   }
 
-  // build sections sorted by category id (0 first)
   const sortedCategoryIds = Array.from(map.keys()).sort((a, b) => a - b);
 
   return sortedCategoryIds.map((categoryId) => {
-    const items: RowItem[] = (map.get(categoryId) ?? []).map((t) => ({
+    const group = map.get(categoryId) ?? [];
+
+    const categoryName =
+      categoryId === 0
+        ? "Sans catégorie"
+        : group[0]?.category_name?.trim() || `Catégorie #${categoryId}`;
+
+    const items: RowItem[] = group.map((t) => ({
       id: t.id,
       title: t.name,
       subtitle: t.description ?? null,
       imageUrl: t.image_signed_url ?? null,
-      onClick: () => {
-        // mets ton navigate ici si tu as react-router
-        // navigate(`/themes/${t.id}`)
-        console.log("click theme", t.id);
-      },
+      ownerName: t.owner_username ?? null,
+      onClick: () => console.log("click theme", t.id),
     }));
 
     return {
       categoryId,
-      title: categoryId === 0 ? "Sans catégorie" : `Catégorie #${categoryId}`,
+      title: categoryName,
       items,
     };
   });

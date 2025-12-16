@@ -2,6 +2,7 @@ import * as React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { Badge } from "@/components/ui/badge";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 export type RowItem = {
@@ -9,6 +10,7 @@ export type RowItem = {
   title: string;
   imageUrl?: string | null;
   subtitle?: string | null;
+  ownerName?: string | null;
   onClick?: () => void;
 };
 
@@ -67,12 +69,27 @@ export function CategoryRow({ title, items }: { title: string; items: RowItem[] 
                 ) : null}
               </div>
 
-              <CardContent className="space-y-1 p-3">
+              <CardContent className="flex h-full flex-col p-3">
+                {/* Titre */}
                 <div className="line-clamp-1 font-medium">{item.title}</div>
+
+                {/* Description */}
                 {item.subtitle ? (
-                  <div className="line-clamp-2 text-sm text-muted-foreground">{item.subtitle}</div>
+                    <div className="mt-1 line-clamp-2 text-sm text-muted-foreground">
+                    {item.subtitle}
+                    </div>
                 ) : null}
-              </CardContent>
+
+                {/* Spacer pour pousser le badge en bas */}
+                <div className="flex-1" />
+
+                {/* Badge owner aligné à droite */}
+                {item.ownerName ? (
+                    <div className="mt-2 flex justify-end">
+                    <Badge variant="secondary">{item.ownerName}</Badge>
+                    </div>
+                ) : null}
+                </CardContent>
             </Card>
           ))}
         </div>
