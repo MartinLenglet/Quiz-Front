@@ -84,6 +84,11 @@ npm create vite@latest quiz-front -- --template react-ts
 npm install react-router-dom
 ```
 
+## Add TanStack Query (handles http request to the backend)
+```
+npm install @tanstack/react-query
+```
+
 ## Run dev mode
 
 ```

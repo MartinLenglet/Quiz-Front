@@ -10,4 +10,18 @@ export default defineConfig({
     alias: { "@": path.resolve(__dirname, "./src") },
   },
   base: "/Quiz-Front/",
+  server: {
+    proxy: {
+      "/api": {
+        target: "http://localhost:8080",
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, "/api/v1"),
+      },
+      "/minio": {
+        target: "http://localhost:9000",
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/minio/, ""),
+      },
+    },
+  }
 })
