@@ -1,5 +1,5 @@
-import { httpGet } from "@/lib/api";
-import type { ThemeWithSignedUrlOut } from "../schemas/theme.schema";
+import { httpRequest } from "@/lib/api";
+import { ThemeWithSignedUrlOutSchema } from "../schemas/theme.schema";
 
 export type ListPublicThemesParams = {
   offset?: number;
@@ -13,5 +13,11 @@ export type ListPublicThemesParams = {
 };
 
 export function listPublicThemes(params: ListPublicThemesParams) {
-  return httpGet<ThemeWithSignedUrlOut[]>("/themes/public", params);
+  return httpRequest({
+    method: "GET",
+    path: "/themes/public",
+    params,
+    responseSchema: ThemeWithSignedUrlOutSchema.array(),
+    withAuth: false,
+  });
 }
