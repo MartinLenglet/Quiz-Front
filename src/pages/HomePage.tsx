@@ -1,6 +1,6 @@
 import * as React from "react";
-import { usePublicThemes } from "@/features/themes/services/usePublicThemes";
-import type { ThemeWithSignedUrlOut } from "@/features/themes/schemas/theme.schema";
+import { usePublicThemes } from "@/features/themes/services/themes.queries";
+import type { ThemeWithSignedUrlOut } from "@/features/themes/schemas/themes.schemas";
 import { NetflixSections, type CategorySection } from "@/features/themes/components/NetflixSections";
 import type { RowItem } from "@/features/themes/components/CategoryRow";
 

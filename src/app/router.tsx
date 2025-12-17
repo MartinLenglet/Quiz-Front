@@ -7,6 +7,7 @@ import GamePage from "@/pages/GamePage"
 import SignInPage from "@/pages/SignInPage"
 import SignUpPage from "@/pages/SignUpPage"
 import AccountPage from "@/pages/AccountPage"
+import MyThemesPage from "@/pages/MyThemesPage";
 
 import { ProtectedRoute } from "@/features/auth"
 
@@ -21,6 +22,7 @@ export default function AppRoutes() {
 
       {/* Routes protégées */}
       <Route element={<ProtectedRoute />}>
+        <Route path="/my-themes" element={<MyThemesPage />} />
         <Route path="/game/:id" element={<GamePage />} />
         <Route path="/create_game" element={<CreateGamePage />} />
         <Route path="/account" element={<AccountPage />} />

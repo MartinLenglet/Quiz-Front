@@ -1,3 +1,3 @@
-export * from "./schemas/theme.schema";
-export * from "./services/themes.service";
-export * from "./services/usePublicThemes";
+export * from "./schemas/themes.schemas";
+export * from "./services/themes.services";
+export * from "./services/themes.queries";

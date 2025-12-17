@@ -43,10 +43,10 @@
 │  │     │  ├─ CategoryRow.tsx
 │  │     │  └─ NetflixSections.tsx
 │  │     ├─ schemas/            # Types/validation/contrats (ex: Zod/Pydantic-like côté TS)
-│  │     │  └─ theme.schema.ts
+│  │     │  └─ theme.schemas.ts
 │  │     ├─ services/           # Accès aux données + hooks orientés domaine
-│  │     │  ├─ theme.services.ts
-│  │     │  ├─ usePublicThemes.ts
+│  │     │  ├─ themes.services.ts
+│  │     │  ├─ themes.queries.ts
 │  │     │  └─ index.ts         # Barrel export du feature (exports publics)
 │  │     └─ (fichiers futurs)   # ex: utils.ts, constants.ts, etc.
 │  │
