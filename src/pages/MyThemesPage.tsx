@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { MyThemesList } from "@/features/themes/components/MyThemesList";
 import { useMyThemesQuery } from "@/features/themes/services/themes.queries";
 import { Button } from "@/components/ui/button";
@@ -6,6 +7,7 @@ import { CreateThemeModal } from "@/features/themes/components/CreateThemeModal"
 import { useCategoriesQuery } from "@/features/themes/services/themes.queries";
 
 export default function MyThemesPage() {
+  const navigate = useNavigate();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
 
   const params = useMemo(
@@ -52,9 +54,10 @@ export default function MyThemesPage() {
           isReady: false,
           validAdmin: false,
         }}
-        onCreated={() => {
-          // orchestration UI: rafraîchir la liste après création
+        onCreated={(theme) => {
+          // on garde la liste à jour + redirection vers la page d’update
           myThemesQuery.refetch();
+          navigate(`/themes/${theme.id}/update`);
         }}
       />
 
@@ -63,6 +66,7 @@ export default function MyThemesPage() {
         isLoading={isLoading}
         isError={isError}
         errorMessage={error instanceof Error ? error.message : undefined}
+        onEditTheme={(themeId) => navigate(`/themes/${themeId}/update`)}
       />
     </div>
   );

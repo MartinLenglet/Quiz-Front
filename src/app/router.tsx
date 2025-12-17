@@ -8,8 +8,10 @@ import SignInPage from "@/pages/SignInPage"
 import SignUpPage from "@/pages/SignUpPage"
 import AccountPage from "@/pages/AccountPage"
 import MyThemesPage from "@/pages/MyThemesPage";
+import UpdateThemePage from "@/pages/UpdateThemePage";
 
 import { ProtectedRoute } from "@/features/auth"
+import { ThemeOwnerRoute } from "@/features/themes/components/ThemeOwnerRoute";
 
 export default function AppRoutes() {
   return (
@@ -22,10 +24,16 @@ export default function AppRoutes() {
 
       {/* Routes protégées */}
       <Route element={<ProtectedRoute />}>
+        <Route path="/account" element={<AccountPage />} />
         <Route path="/my-themes" element={<MyThemesPage />} />
+
+        {/* Owner-only */}
+        <Route element={<ThemeOwnerRoute redirectTo="/my-themes" />}>
+          <Route path="/themes/:themeId/update" element={<UpdateThemePage />} />
+        </Route>
+
         <Route path="/game/:id" element={<GamePage />} />
         <Route path="/create_game" element={<CreateGamePage />} />
-        <Route path="/account" element={<AccountPage />} />
       </Route>
 
       {/* Protégé (admin only) - exemple */}

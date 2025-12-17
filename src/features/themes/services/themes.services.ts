@@ -76,3 +76,12 @@ export async function getThemeCategories(): Promise<ThemeCategoriesResponse> {
     responseSchema: ThemeCategoriesResponseSchema,
   });
 }
+
+export async function getThemeById(themeId: number): Promise<ThemeOut> {
+  return httpRequest<ThemeOut>({
+    method: "GET",
+    path: `/themes/${themeId}`,
+    withAuth: true,
+    responseSchema: ThemeOutSchema,
+  });
+}

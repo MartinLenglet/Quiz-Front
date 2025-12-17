@@ -1,6 +1,6 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { createTheme } from "./themes.services";
-import { listPublicThemes, type ListPublicThemesParams, listMyThemes, type ListMyThemesParams, getThemeCategories } from "./themes.services";
+import { listPublicThemes, type ListPublicThemesParams, listMyThemes, type ListMyThemesParams, getThemeCategories, getThemeById } from "./themes.services";
 import type { ThemeOut, ThemeCreateIn, ThemeCategory } from "../schemas/themes.schemas";
 
 export function usePublicThemes(params: ListPublicThemesParams) {
@@ -33,5 +33,17 @@ export function useCategoriesQuery() {
       return res.items;
     },
     staleTime: 10 * 60 * 1000, // 10 min
+  });
+}
+
+export function useThemeByIdQuery(themeId: number | null) {
+  return useQuery<ThemeOut, Error>({
+    queryKey: ["themes", "byId", themeId],
+    queryFn: async () => {
+      if (!themeId) throw new Error("themeId manquant");
+      return getThemeById(themeId);
+    },
+    enabled: typeof themeId === "number" && Number.isFinite(themeId),
+    staleTime: 30 * 1000,
   });
 }
