@@ -29,3 +29,31 @@ export const ThemeWithSignedUrlOutSchema = ThemeOutSchema.extend({
 });
 
 export type ThemeWithSignedUrlOut = z.infer<typeof ThemeWithSignedUrlOutSchema>;
+
+export const ThemeCreateInSchema = z.object({
+  name: z.string().min(1, "Le nom est requis"),
+  description: z.string().min(1, "La description est requise"),
+  image_id: z.number(),
+
+  category_id: z.number(),
+  is_public: z.boolean(),
+  is_ready: z.boolean(),
+  valid_admin: z.boolean(),
+  owner_id: z.number(),
+});
+
+export type ThemeCreateIn = z.infer<typeof ThemeCreateInSchema>;
+
+export const ThemeCategorySchema = z.object({
+  id: z.number(),
+  name: z.string(),
+  color: z.string(), // ex: "#FF4D4F"
+});
+
+export type ThemeCategory = z.infer<typeof ThemeCategorySchema>;
+
+export const ThemeCategoriesResponseSchema = z.object({
+  items: ThemeCategorySchema.array(),
+});
+
+export type ThemeCategoriesResponse = z.infer<typeof ThemeCategoriesResponseSchema>;

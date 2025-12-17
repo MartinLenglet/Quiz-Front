@@ -1,9 +1,13 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { MyThemesList } from "@/features/themes/components/MyThemesList";
 import { useMyThemesQuery } from "@/features/themes/services/themes.queries";
 import { Button } from "@/components/ui/button";
+import { CreateThemeModal } from "@/features/themes/components/CreateThemeModal";
+import { useCategoriesQuery } from "@/features/themes/services/themes.queries";
 
 export default function MyThemesPage() {
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+
   const params = useMemo(
     () => ({
       offset: 0,
@@ -14,7 +18,11 @@ export default function MyThemesPage() {
     []
   );
 
-  const { data, isLoading, isError, error } = useMyThemesQuery(params);
+  const myThemesQuery = useMyThemesQuery(params);
+  const { data, isLoading, isError, error } = myThemesQuery;
+
+  const categoriesQuery = useCategoriesQuery();
+  const categories = categoriesQuery.data ?? [];
 
   return (
     <div className="space-y-10">
@@ -26,10 +34,29 @@ export default function MyThemesPage() {
             Retrouvez ici tous les thèmes que vous avez créés.
         </p>
 
-        <Button>
+        <Button
+          onClick={() => setIsCreateOpen(true)}
+          disabled={categoriesQuery.isLoading || categoriesQuery.isError}
+        >
             Créer un thème
         </Button>
-    </div>
+      </div>
+
+      <CreateThemeModal
+        open={isCreateOpen}
+        onOpenChange={setIsCreateOpen}
+        categories={categories}
+        defaults={{
+          ownerId: 0,
+          isPublic: false,
+          isReady: false,
+          validAdmin: false,
+        }}
+        onCreated={() => {
+          // orchestration UI: rafraîchir la liste après création
+          myThemesQuery.refetch();
+        }}
+      />
 
       <MyThemesList
         themes={data}

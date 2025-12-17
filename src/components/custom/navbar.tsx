@@ -31,8 +31,8 @@ export function Navbar() {
 
   const links = [
     { to: "/", label: "Accueil" },
-    { to: "/create_game", label: "Créer une partie" },
-    { to: "/game/1", label: "Exemple de partie" },
+    { to: "/my-games", label: "Mes Parties" },
+    { to: "/my-themes", label: "Mes Thèmes" },
     { to: "/about", label: "À propos" },
   ];
 

@@ -49,6 +49,10 @@ async function parseBody(res: Response): Promise<unknown> {
   }
 }
 
+function isFormData(value: unknown): value is FormData {
+  return typeof FormData !== "undefined" && value instanceof FormData;
+}
+
 type HttpRequestOptions<TSchema extends z.ZodTypeAny | undefined> = {
   method: HttpMethod;
   path: string; // ex: "/auth/me" (SANS /v1)
@@ -66,7 +70,11 @@ export async function httpRequest<TOutput, TSchema extends z.ZodTypeAny | undefi
 
   const headers: Record<string, string> = {};
 
-  if (options.body !== undefined) {
+  const hasBody = options.body !== undefined;
+  const isMultipart = hasBody && isFormData(options.body);
+
+  // JSON par défaut, mais surtout PAS de Content-Type forcé pour FormData
+  if (hasBody && !isMultipart) {
     headers["Content-Type"] = "application/json";
   }
 
@@ -79,7 +87,11 @@ export async function httpRequest<TOutput, TSchema extends z.ZodTypeAny | undefi
     method: options.method,
     headers,
     credentials: "include",
-    body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
+    body: !hasBody
+      ? undefined
+      : isMultipart
+        ? (options.body as FormData)
+        : JSON.stringify(options.body),
   });
 
   const data = await parseBody(res);

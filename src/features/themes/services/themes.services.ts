@@ -1,5 +1,9 @@
 import { httpRequest } from "@/lib/api";
-import { ThemeWithSignedUrlOutSchema } from "../schemas/themes.schemas";
+import { ThemeWithSignedUrlOutSchema, ThemeOutSchema, type ThemeOut, type ThemeCreateIn } from "../schemas/themes.schemas";
+import { 
+  ThemeCategoriesResponseSchema,
+  type ThemeCategoriesResponse, 
+} from "../schemas/themes.schemas";
 
 export type ListPublicThemesParams = {
   offset?: number;
@@ -51,5 +55,24 @@ export function listMyThemes(params: ListMyThemesParams) {
     },
     responseSchema: ThemeWithSignedUrlOutSchema.array(),
     // withAuth: true (défaut) -> Bearer si présent + refresh auto si 401
+  });
+}
+
+export async function createTheme(input: ThemeCreateIn): Promise<ThemeOut> {
+  return httpRequest<ThemeOut>({
+    method: "POST",
+    path: "/themes", // ✅ SANS /v1
+    body: input,
+    responseSchema: ThemeOutSchema,
+    withAuth: true,
+  });
+}
+
+export async function getThemeCategories(): Promise<ThemeCategoriesResponse> {
+  return httpRequest<ThemeCategoriesResponse>({
+    method: "GET",
+    path: "/themes/categories",
+    withAuth: false,
+    responseSchema: ThemeCategoriesResponseSchema,
   });
 }
