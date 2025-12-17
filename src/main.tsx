@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from "react-router-dom"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import AppRoutes from "@/app/router"
-import { Navbar } from "@/components/ui/custom_navbar"
+import { Navbar } from "@/components/custom/navbar"
 import "./index.css"
 
 const queryClient = new QueryClient();
