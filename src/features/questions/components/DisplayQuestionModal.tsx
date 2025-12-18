@@ -48,25 +48,24 @@ function MediaPanel({ media }: { media?: Media }) {
 
   return (
     <div className="flex flex-col items-center gap-4">
-    {media?.imageUrl ? (
-        <img
-        src={media.imageUrl}
-        alt="Media image"
-        className="max-h-80 max-w-full rounded-md border"
-        />
-    ) : null}
+      {media?.audioUrl ? (
+          <audio className="w-full max-w-md" controls src={media.audioUrl} />
+      ) : null}
+      {media?.imageUrl ? (
+          <img
+          src={media.imageUrl}
+          alt="Media image"
+          className="max-h-80 max-w-full rounded-md border"
+          />
+      ) : null}
 
-    {media?.audioUrl ? (
-        <audio className="w-full max-w-md" controls src={media.audioUrl} />
-    ) : null}
-
-    {media?.videoUrl ? (
-        <video
-        className="max-h-80 w-full max-w-xl rounded-md border"
-        controls
-        src={media.videoUrl}
-        />
-    ) : null}
+      {media?.videoUrl ? (
+          <video
+          className="max-h-80 w-full max-w-xl rounded-md border"
+          controls
+          src={media.videoUrl}
+          />
+      ) : null}
     </div>
   );
 }
