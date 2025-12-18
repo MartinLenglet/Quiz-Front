@@ -15,6 +15,8 @@ export function useMeQuery(enabled = true) {
     enabled,
     retry: false,
     staleTime: 60_000,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: true,
   });
 }
 

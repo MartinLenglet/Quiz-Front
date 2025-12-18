@@ -1,23 +1,26 @@
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { useMeQuery } from "../services/auth.queries";
+import { HttpError } from "@/lib/api";
 
-type ProtectedRouteProps = {
-  requireAdmin?: boolean;
-  redirectTo?: string;
-};
-
-export function ProtectedRoute({ requireAdmin = false, redirectTo = "/sign-in" }: ProtectedRouteProps) {
+export function ProtectedRoute({ requireAdmin = false, redirectTo = "/sign-in" }) {
   const location = useLocation();
-  const { data: user, isLoading, isError } = useMeQuery(true);
+  const { data: user, isLoading, isFetching, error } = useMeQuery(true);
 
-  if (isLoading) return null;
+  // Pendant un fetch/refetch, évite de trancher trop vite
+  if (isLoading || isFetching) return null;
 
-  // Pas connecté (ou token invalide/expiré)
-  if (isError || !user) {
+  const status = error instanceof HttpError ? error.status : null;
+
+  // Seulement si on est sûr que ce n'est plus authentifié
+  if (status === 401 || !user) {
     return <Navigate to={redirectTo} replace state={{ from: location.pathname }} />;
   }
 
-  // Connecté mais pas admin, et route admin requise
+  // Si erreur réseau/5xx: ne déconnecte pas, affiche plutôt un fallback
+  if (error) {
+    return <div>Impossible de vérifier la session (réseau/serveur). Réessaie.</div>;
+  }
+
   if (requireAdmin && !user.admin) {
     return <Navigate to="/" replace />;
   }
