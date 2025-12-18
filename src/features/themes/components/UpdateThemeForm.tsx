@@ -20,6 +20,7 @@ function buildBlankQuestions(count: number): QuestionDraft[] {
     id: `q-${idx + 1}-${crypto.randomUUID()}`,
     questionText: "",
     answerText: "",
+    points: 1,
     questionImage: null,
     questionAudio: null,
     answerImage: null,
@@ -49,8 +50,6 @@ export function UpdateThemeForm({
   React.useEffect(() => {
     if (!theme) return;
 
-    console.log(theme)
-
     setName(theme.name ?? "");
     setDescription(theme.description ?? "");
     setCategoryId(theme.category_id ?? null);
@@ -67,6 +66,7 @@ export function UpdateThemeForm({
 
       questionText: q.question ?? "",
       answerText: q.answer ?? "",
+      points: q.points ?? 1,
 
       // nouveaux fichiers = null au départ
       questionImage: null,
@@ -105,6 +105,7 @@ export function UpdateThemeForm({
         id: `q-${prev.length + 1}-${crypto.randomUUID()}`,
         questionText: "",
         answerText: "",
+        points: 1,
         questionImage: null,
         questionAudio: null,
         answerImage: null,
@@ -158,6 +159,7 @@ export function UpdateThemeForm({
       />
 
       <UpdateThemeQuestionsList
+        themeTitle={name}
         questions={questions}
         onChangeQuestion={updateQuestion}
         onAddQuestion={addQuestion}

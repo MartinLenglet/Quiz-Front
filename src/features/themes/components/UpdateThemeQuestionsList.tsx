@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { UpdateThemeQuestion, type QuestionDraft } from "./UpdateThemeQuestion";
 
 type Props = {
+  themeTitle: string;
   questions: QuestionDraft[];
   onChangeQuestion: (id: string, patch: Partial<QuestionDraft>) => void;
   onAddQuestion: () => void;
@@ -10,6 +11,7 @@ type Props = {
 };
 
 export function UpdateThemeQuestionsList({
+  themeTitle,
   questions,
   onChangeQuestion,
   onAddQuestion,
@@ -35,6 +37,7 @@ export function UpdateThemeQuestionsList({
           <UpdateThemeQuestion
             key={q.id}
             index={idx}
+            themeTitle={themeTitle}
             question={q}
             onChange={(patch) => onChangeQuestion(q.id, patch)}
             showSeparator={idx < questions.length - 1}
