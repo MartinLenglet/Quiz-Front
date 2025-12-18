@@ -1,6 +1,6 @@
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { createTheme } from "./themes.services";
-import { listPublicThemes, type ListPublicThemesParams, listMyThemes, type ListMyThemesParams, getThemeCategories, getThemeById } from "./themes.services";
+import { listPublicThemes, type ListPublicThemesParams, listMyThemes, type ListMyThemesParams, getThemeCategories, getThemeById, updateThemeWithQuestions, type ThemeUpdateWithQuestionsIn } from "./themes.services";
 import type { ThemeOut, ThemeCreateIn, ThemeCategory, ThemeDetailJoinWithSignedUrlOut } from "../schemas/themes.schemas";
 
 export function usePublicThemes(params: ListPublicThemesParams) {
@@ -45,5 +45,20 @@ export function useThemeByIdQuery(themeId: number | null) {
     },
     enabled: typeof themeId === "number" && Number.isFinite(themeId),
     staleTime: 30 * 1000,
+  });
+}
+
+export function useUpdateThemeWithQuestionsMutation() {
+  const qc = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (args: { themeId: number; input: ThemeUpdateWithQuestionsIn }) =>
+      updateThemeWithQuestions(args.themeId, args.input),
+    onSuccess: (_data, vars) => {
+      // à adapter selon tes queryKeys existantes
+      qc.invalidateQueries({ queryKey: ["themes", "byId", vars.themeId] });
+      qc.invalidateQueries({ queryKey: ["themes", "me"] });
+      qc.invalidateQueries({ queryKey: ["themes", "public"] });
+    },
   });
 }

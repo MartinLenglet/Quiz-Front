@@ -28,6 +28,14 @@ export type QuestionDraft = {
   existingAnswerImageUrl?: string | null;
   existingAnswerAudioUrl?: string | null;
   existingAnswerVideoUrl?: string | null;
+  
+  // IDs existants (indispensable pour PATCH)
+  existingQuestionImageId?: number | null;
+  existingQuestionAudioId?: number | null;
+  existingQuestionVideoId?: number | null;
+  existingAnswerImageId?: number | null;
+  existingAnswerAudioId?: number | null;
+  existingAnswerVideoId?: number | null;
 };
 
 type Props = {

@@ -88,3 +88,44 @@ export async function getThemeById(themeId: number, params?: { with_signed_url?:
     responseSchema: ThemeDetailJoinWithSignedUrlOutSchema,
   });
 }
+
+export type ThemeQuestionUpsertIn = {
+  // optionnel si ton backend ne le prend pas : garde uniquement si supporté
+  id?: number;
+
+  question: string;
+  answer: string;
+  points: number;
+
+  question_image_id?: number | null;
+  answer_image_id?: number | null;
+  question_audio_id?: number | null;
+  answer_audio_id?: number | null;
+  question_video_id?: number | null;
+  answer_video_id?: number | null;
+};
+
+export type ThemeUpdateWithQuestionsIn = {
+  name?: string;
+  description?: string | null;
+  image_id?: number | null;
+  category_id?: number | null;
+  is_public?: boolean;
+  is_ready?: boolean;
+  valid_admin?: boolean;
+  owner_id?: number | null;
+
+  questions: ThemeQuestionUpsertIn[];
+};
+
+export async function updateThemeWithQuestions(themeId: number, input: ThemeUpdateWithQuestionsIn) {
+  return httpRequest<ThemeDetailJoinWithSignedUrlOut>({
+    method: "PATCH",
+    path: `/themes/${themeId}`,
+    body: input,
+    // ✅ pour récupérer les signed urls après update
+    params: { with_signed_url: true },
+    responseSchema: ThemeDetailJoinWithSignedUrlOutSchema,
+    withAuth: true,
+  });
+}
