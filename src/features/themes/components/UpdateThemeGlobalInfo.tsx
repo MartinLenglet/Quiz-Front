@@ -1,3 +1,4 @@
+import * as React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -33,6 +34,22 @@ type Props = {
   onIsReadyChange: (v: boolean) => void;
 };
 
+function useObjectUrl(file: File | null | undefined) {
+  const [url, setUrl] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    if (!file) {
+      setUrl(null);
+      return;
+    }
+    const objectUrl = URL.createObjectURL(file);
+    setUrl(objectUrl);
+    return () => URL.revokeObjectURL(objectUrl);
+  }, [file]);
+
+  return url;
+}
+
 export function UpdateThemeGlobalInfo({
   name,
   description,
@@ -54,6 +71,8 @@ export function UpdateThemeGlobalInfo({
   const NO_CATEGORY_VALUE = "__none__";
   const selectedValue = categoryId !== null ? String(categoryId) : NO_CATEGORY_VALUE;
   const selectedInList = categoryId !== null && categories.some((c) => c.id === categoryId);
+  const coverLocalUrl = useObjectUrl(coverImage);
+  const coverSrc = coverLocalUrl ?? existingCoverImageUrl ?? null;
 
   return (
     <Card>
@@ -114,11 +133,11 @@ export function UpdateThemeGlobalInfo({
           />
         </div>
 
-        {existingCoverImageUrl && !coverImage ? (
+        {coverSrc ? (
           <div className="space-y-2">
-            <Label>Image actuelle</Label>
+            <Label>{coverImage ? "Nouvelle image" : "Image actuelle"}</Label>
             <img
-              src={existingCoverImageUrl}
+              src={coverSrc}
               alt="Couverture du thème"
               className="max-h-48 w-auto rounded-md border"
             />

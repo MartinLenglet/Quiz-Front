@@ -46,8 +46,6 @@ export default function HomePage() {
     offset: 0,
     limit: 100,
     newest_first: true,
-    ready_only: true,
-    validated_only: false,
     with_signed_url: true, // pour afficher les images
   });
 
