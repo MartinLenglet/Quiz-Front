@@ -1,7 +1,7 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { createTheme } from "./themes.services";
 import { listPublicThemes, type ListPublicThemesParams, listMyThemes, type ListMyThemesParams, getThemeCategories, getThemeById } from "./themes.services";
-import type { ThemeOut, ThemeCreateIn, ThemeCategory } from "../schemas/themes.schemas";
+import type { ThemeOut, ThemeCreateIn, ThemeCategory, ThemeDetailJoinWithSignedUrlOut } from "../schemas/themes.schemas";
 
 export function usePublicThemes(params: ListPublicThemesParams) {
   return useQuery({
@@ -37,11 +37,11 @@ export function useCategoriesQuery() {
 }
 
 export function useThemeByIdQuery(themeId: number | null) {
-  return useQuery<ThemeOut, Error>({
+  return useQuery<ThemeDetailJoinWithSignedUrlOut, Error>({
     queryKey: ["themes", "byId", themeId],
     queryFn: async () => {
       if (!themeId) throw new Error("themeId manquant");
-      return getThemeById(themeId);
+      return getThemeById(themeId, { with_signed_url: true });
     },
     enabled: typeof themeId === "number" && Number.isFinite(themeId),
     staleTime: 30 * 1000,

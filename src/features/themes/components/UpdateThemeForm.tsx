@@ -3,17 +3,34 @@ import { Button } from "@/components/ui/button";
 import { UpdateThemeGlobalInfo } from "./UpdateThemeGlobalInfo";
 import { UpdateThemeQuestionsList } from "./UpdateThemeQuestionsList";
 import type { QuestionDraft } from "./UpdateThemeQuestion";
-import type { ThemeCategory } from "@/features/themes/schemas/themes.schemas";
+import type { ThemeCategory, ThemeDetailJoinWithSignedUrlOut } from "@/features/themes/schemas/themes.schemas";
 
 type Props = {
   themeId: number | null;
+  theme: ThemeDetailJoinWithSignedUrlOut | null;
+  themeLoading: boolean;
+
   categories: ThemeCategory[];
   defaultQuestionsCount: number;
   categoriesLoading: boolean;
 };
 
+function buildBlankQuestions(count: number): QuestionDraft[] {
+  return Array.from({ length: count }).map((_, idx) => ({
+    id: `q-${idx + 1}-${crypto.randomUUID()}`,
+    questionText: "",
+    answerText: "",
+    questionImage: null,
+    questionAudio: null,
+    answerImage: null,
+    answerAudio: null,
+  }));
+}
+
 export function UpdateThemeForm({
   themeId,
+  theme,
+  themeLoading,
   categories,
   defaultQuestionsCount,
   categoriesLoading,
@@ -25,17 +42,57 @@ export function UpdateThemeForm({
   const [isPublic, setIsPublic] = React.useState(false);
   const [isReady, setIsReady] = React.useState(false);
 
-  const [questions, setQuestions] = React.useState<QuestionDraft[]>(() =>
-    Array.from({ length: defaultQuestionsCount }).map((_, idx) => ({
-      id: `q-${idx + 1}-${crypto.randomUUID()}`,
-      questionText: "",
-      answerText: "",
+  const [questions, setQuestions] = React.useState<QuestionDraft[]>(
+    () => buildBlankQuestions(defaultQuestionsCount)
+  );
+
+  React.useEffect(() => {
+    if (!theme) return;
+
+    console.log(theme)
+
+    setName(theme.name ?? "");
+    setDescription(theme.description ?? "");
+    setCategoryId(theme.category_id ?? null);
+    setIsPublic(Boolean(theme.is_public));
+    setIsReady(Boolean(theme.is_ready));
+
+    // ⚠️ file inputs : impossible de préremplir un File programmaticalement
+    // donc coverImage reste null (mais tu peux afficher l'image actuelle ailleurs si besoin)
+    setCoverImage(null);
+
+    const mapped: QuestionDraft[] = (theme.questions ?? []).map((q) => ({
+      id: `qid-${q.id}`,       // id UI stable
+      backendId: q.id,         // id backend
+
+      questionText: q.question ?? "",
+      answerText: q.answer ?? "",
+
+      // nouveaux fichiers = null au départ
       questionImage: null,
       questionAudio: null,
       answerImage: null,
       answerAudio: null,
-    }))
-  );
+
+      // existants (API)
+      existingQuestionImageUrl: q.question_image_signed_url ?? null,
+      existingAnswerImageUrl: q.answer_image_signed_url ?? null,
+      existingQuestionAudioUrl: q.question_audio_signed_url ?? null,
+      existingAnswerAudioUrl: q.answer_audio_signed_url ?? null,
+
+      // si tu veux gérer la vidéo plus tard
+      existingQuestionVideoUrl: q.question_video_signed_url ?? null,
+      existingAnswerVideoUrl: q.answer_video_signed_url ?? null,
+    }));
+
+    // pad pour garder au moins defaultQuestionsCount
+    const padded =
+      mapped.length >= defaultQuestionsCount
+        ? mapped
+        : [...mapped, ...buildBlankQuestions(defaultQuestionsCount - mapped.length)];
+
+    setQuestions(padded);
+  }, [theme, defaultQuestionsCount]);
 
   function updateQuestion(id: string, patch: Partial<QuestionDraft>) {
     setQuestions((prev) => prev.map((q) => (q.id === id ? { ...q, ...patch } : q)));
@@ -63,7 +120,6 @@ export function UpdateThemeForm({
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
-    // API à venir
     console.log("UPDATE_THEME_DRAFT", {
       themeId,
       name,
@@ -74,6 +130,10 @@ export function UpdateThemeForm({
       isReady,
       questions,
     });
+  }
+
+  if (themeLoading) {
+    return <div className="text-sm text-muted-foreground">Chargement du thème…</div>;
   }
 
   return (
@@ -87,6 +147,8 @@ export function UpdateThemeForm({
         isReady={isReady}
         categories={categories}
         categoriesLoading={categoriesLoading}
+        categoryName={theme?.category_name ?? null}
+        existingCoverImageUrl={theme?.image_signed_url ?? null}
         onNameChange={setName}
         onDescriptionChange={setDescription}
         onCategoryChange={setCategoryId}

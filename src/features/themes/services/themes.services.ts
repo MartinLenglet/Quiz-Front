@@ -1,5 +1,5 @@
 import { httpRequest } from "@/lib/api";
-import { ThemeWithSignedUrlOutSchema, ThemeOutSchema, type ThemeOut, type ThemeCreateIn } from "../schemas/themes.schemas";
+import { ThemeWithSignedUrlOutSchema, ThemeOutSchema, ThemeDetailJoinWithSignedUrlOutSchema, type ThemeOut, type ThemeCreateIn, type ThemeDetailJoinWithSignedUrlOut} from "../schemas/themes.schemas";
 import { 
   ThemeCategoriesResponseSchema,
   type ThemeCategoriesResponse, 
@@ -77,11 +77,14 @@ export async function getThemeCategories(): Promise<ThemeCategoriesResponse> {
   });
 }
 
-export async function getThemeById(themeId: number): Promise<ThemeOut> {
-  return httpRequest<ThemeOut>({
+export async function getThemeById(themeId: number, params?: { with_signed_url?: boolean }): Promise<ThemeDetailJoinWithSignedUrlOut> {
+  return httpRequest<ThemeDetailJoinWithSignedUrlOut>({
     method: "GET",
     path: `/themes/${themeId}`,
     withAuth: true,
-    responseSchema: ThemeOutSchema,
+    params: {
+      with_signed_url: params?.with_signed_url ?? true,
+    },
+    responseSchema: ThemeDetailJoinWithSignedUrlOutSchema,
   });
 }

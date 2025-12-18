@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { QuestionJoinWithSignedUrlOutSchema } from "@/features/questions/schemas/questions.schemas";
+
 export const ThemeOutSchema = z.object({
   id: z.number(),
   name: z.string(),
@@ -29,6 +31,14 @@ export const ThemeWithSignedUrlOutSchema = ThemeOutSchema.extend({
 });
 
 export type ThemeWithSignedUrlOut = z.infer<typeof ThemeWithSignedUrlOutSchema>;
+
+export const ThemeDetailJoinWithSignedUrlOutSchema = ThemeWithSignedUrlOutSchema.extend({
+  questions: z.array(QuestionJoinWithSignedUrlOutSchema).default([]),
+});
+
+export type ThemeDetailJoinWithSignedUrlOut = z.infer<
+  typeof ThemeDetailJoinWithSignedUrlOutSchema
+>;
 
 export const ThemeCreateInSchema = z.object({
   name: z.string().min(1, "Le nom est requis"),

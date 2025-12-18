@@ -22,10 +22,12 @@ type Props = {
   isReady: boolean;
   categories: ThemeCategory[];
   categoriesLoading: boolean;
+  categoryName: string | null;
+  existingCoverImageUrl: string | null;
 
   onNameChange: (v: string) => void;
   onDescriptionChange: (v: string) => void;
-  onCategoryChange: (v: number) => void;
+  onCategoryChange: (v: number | null) => void;
   onCoverImageChange: (f: File | null) => void;
   onIsPublicChange: (v: boolean) => void;
   onIsReadyChange: (v: boolean) => void;
@@ -40,6 +42,8 @@ export function UpdateThemeGlobalInfo({
   isReady,
   categories,
   categoriesLoading,
+  categoryName,
+  existingCoverImageUrl,
   onNameChange,
   onDescriptionChange,
   onCategoryChange,
@@ -47,6 +51,10 @@ export function UpdateThemeGlobalInfo({
   onIsPublicChange,
   onIsReadyChange,
 }: Props) {
+  const NO_CATEGORY_VALUE = "__none__";
+  const selectedValue = categoryId !== null ? String(categoryId) : NO_CATEGORY_VALUE;
+  const selectedInList = categoryId !== null && categories.some((c) => c.id === categoryId);
+
   return (
     <Card>
       <CardHeader>
@@ -70,14 +78,24 @@ export function UpdateThemeGlobalInfo({
         <div className="space-y-2">
           <Label>Catégorie</Label>
           <Select
-            value={categoryId ? String(categoryId) : undefined}
-            onValueChange={(v) => onCategoryChange(Number(v))}
+            value={selectedValue}
+            onValueChange={(v) => onCategoryChange(v === NO_CATEGORY_VALUE ? null : Number(v))}
             disabled={categoriesLoading}
           >
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Choisir une catégorie" />
             </SelectTrigger>
+
             <SelectContent className="w-[var(--radix-select-trigger-width)]">
+              <SelectItem value={NO_CATEGORY_VALUE}>
+                <span className="text-muted-foreground">Aucune catégorie</span>
+              </SelectItem>
+
+              {/* ✅ Fallback: permet d’afficher un label même avant le chargement des catégories */}
+              {categoryId !== null && !selectedInList && categoryName ? (
+                <SelectItem value={String(categoryId)}>{categoryName}</SelectItem>
+              ) : null}
+
               {categories.map((c) => (
                 <SelectItem key={c.id} value={String(c.id)}>
                   {c.name}
@@ -95,6 +113,17 @@ export function UpdateThemeGlobalInfo({
             onChange={(e) => onCoverImageChange(e.target.files?.[0] ?? null)}
           />
         </div>
+
+        {existingCoverImageUrl && !coverImage ? (
+          <div className="space-y-2">
+            <Label>Image actuelle</Label>
+            <img
+              src={existingCoverImageUrl}
+              alt="Couverture du thème"
+              className="max-h-48 w-auto rounded-md border"
+            />
+          </div>
+        ) : null}
 
         <div className="flex items-center gap-3">
           <Checkbox
