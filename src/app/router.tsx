@@ -2,7 +2,7 @@ import { Routes, Route } from "react-router-dom"
 
 import HomePage from "@/pages/HomePage"
 import AboutPage from "@/pages/AboutPage"
-import CreateGamePage from "@/pages/CreateGamePage"
+import MyGamesPage from "@/pages/MyGamesPage"
 import GamePage from "@/pages/GamePage"
 import SignInPage from "@/pages/SignInPage"
 import SignUpPage from "@/pages/SignUpPage"
@@ -12,6 +12,7 @@ import UpdateThemePage from "@/pages/UpdateThemePage";
 
 import { ProtectedRoute } from "@/features/auth"
 import { ThemeOwnerRoute } from "@/features/themes/components/ThemeOwnerRoute";
+import { GameOwnerRoute } from "@/features/games/components/GameOwnerRoute";
 
 export default function AppRoutes() {
   return (
@@ -32,8 +33,13 @@ export default function AppRoutes() {
           <Route path="/themes/:themeId/update" element={<UpdateThemePage />} />
         </Route>
 
-        <Route path="/game/:id" element={<GamePage />} />
-        <Route path="/create_game" element={<CreateGamePage />} />
+        <Route path="/my-games" element={<MyGamesPage />} />
+        <Route path="/games/:gameUrl" element={<GamePage />} />
+
+        {/* Owner-only
+        <Route element={<GameOwnerRoute redirectTo="/my-games" />}>
+          <Route path="/games/:gameUrl" element={<GamePage />} />
+        </Route> */}
       </Route>
 
       {/* Protégé (admin only) - exemple */}
