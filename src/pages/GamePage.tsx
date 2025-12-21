@@ -8,6 +8,7 @@ import {
   useGameStateQuery,
   useUseJokerMutation,
 } from "@/features/games/services/games.queries";
+import { useQuestionByIdQuery } from "@/features/questions/services/questions.queries";
 import type { GridCellOut } from "@/features/games/schemas/games.schemas";
 
 import { GameTurnHeader } from "@/features/games/components/GameTurnHeader";
@@ -26,6 +27,30 @@ export default function GamePage() {
   const colors = colorsQuery.data ?? [];
 
   const [selectedCell, setSelectedCell] = useState<GridCellOut | null>(null);
+
+  const selectedQuestionId = selectedCell?.question.id;
+  const questionQuery = useQuestionByIdQuery(selectedQuestionId, { with_signed_url: true });
+
+  const q = questionQuery.data;
+
+  const questionText = q?.question ?? (selectedCell ? "Chargement…" : "");
+  const answerText = q?.answer ?? "";
+
+  const questionMedia = q
+    ? {
+        imageUrl: q.question_image_signed_url ?? null,
+        audioUrl: q.question_audio_signed_url ?? null,
+        videoUrl: q.question_video_signed_url ?? null,
+      }
+    : undefined;
+
+  const answerMedia = q
+    ? {
+        imageUrl: q.answer_image_signed_url ?? null,
+        audioUrl: q.answer_audio_signed_url ?? null,
+        videoUrl: q.answer_video_signed_url ?? null,
+      }
+    : undefined;
 
   const answerMutation = useAnswerQuestionMutation(gameUrl ?? "");
   const jokerMutation = useUseJokerMutation(gameUrl ?? "");
@@ -168,8 +193,10 @@ export default function GamePage() {
         themeTitle={selectedCell?.question.theme.name ?? "Thème"}
         points={selectedCell?.question.points ?? 0}
         turnLabel={turnLabel}
-        questionText={selectedCell ? `Question #${selectedCell.question.id}` : ""}
-        answerText={selectedCell ? `Réponse #${selectedCell.question.id}` : ""}
+        questionText={questionText}
+        answerText={answerText}
+        questionMedia={questionMedia}
+        answerMedia={answerMedia}
         autoCloseOnAction={true}
         onGoodAnswer={() => submitAnswer({ correct: true, skip: false })}
         onBadAnswer={() => submitAnswer({ correct: false, skip: false })}
