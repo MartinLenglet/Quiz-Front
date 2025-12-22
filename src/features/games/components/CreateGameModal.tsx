@@ -313,8 +313,8 @@ export function CreateGameModal({ open, onOpenChange, onCreated }: Props) {
                             }
                             disabled={createMutation.isPending}
                           >
-                            <SelectTrigger className="justify-between">
-                              <SelectValue placeholder="Choisir une couleur…" asChild>
+                            <SelectTrigger className="w-full justify-between">
+                              <SelectValue placeholder="Couleur…" asChild>
                                 <div className="flex items-center gap-2">
                                   <ColorSwatch
                                     hex={selectedColor?.hex}
@@ -327,13 +327,17 @@ export function CreateGameModal({ open, onOpenChange, onCreated }: Props) {
                                   <span className="text-sm">
                                     {selectedColor
                                       ? selectedColor.name
-                                      : "Choisir une couleur…"}
+                                      : "Couleur…"}
                                   </span>
                                 </div>
                               </SelectValue>
                             </SelectTrigger>
 
-                            <SelectContent>
+                            <SelectContent
+                              position="popper"
+                              sideOffset={8}
+                              className="z-[100] max-h-[260px] overflow-y-auto"
+                            >
                               {colorsOptions.map((c) => (
                                 <SelectItem key={c.id} value={String(c.id)}>
                                   <div className="flex items-center gap-2">
