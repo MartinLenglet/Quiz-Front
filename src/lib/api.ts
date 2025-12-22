@@ -53,19 +53,19 @@ function isFormData(value: unknown): value is FormData {
   return typeof FormData !== "undefined" && value instanceof FormData;
 }
 
-type HttpRequestOptions<TSchema extends z.ZodTypeAny | undefined> = {
+type HttpRequestOptions<TOutput> = {
   method: HttpMethod;
   path: string; // ex: "/auth/me" (SANS /v1)
   params?: ApiParams;
   body?: unknown;
-  responseSchema?: TSchema;
+  responseSchema?: z.ZodType<TOutput>;
   withAuth?: boolean; // default true
   _retried?: boolean;
 };
 
-export async function httpRequest<TOutput, TSchema extends z.ZodTypeAny | undefined = undefined>(
-  options: HttpRequestOptions<TSchema>
-): Promise<TSchema extends z.ZodTypeAny ? z.infer<TSchema> : TOutput> {
+export async function httpRequest<TOutput>(
+  options: HttpRequestOptions<TOutput>
+): Promise<TOutput> {
   tokenStorage.initFromStorage();
 
   const headers: Record<string, string> = {};
@@ -100,7 +100,7 @@ export async function httpRequest<TOutput, TSchema extends z.ZodTypeAny | undefi
   if (res.status === 401 && options.withAuth !== false && !options._retried) {
     const refreshed = await tryRefresh();
     if (refreshed) {
-      return httpRequest<TOutput, TSchema>({ ...options, _retried: true });
+      return httpRequest<TOutput>({ ...options, _retried: true });
     }
   }
 
@@ -112,7 +112,7 @@ export async function httpRequest<TOutput, TSchema extends z.ZodTypeAny | undefi
     return options.responseSchema.parse(data) as any;
   }
 
-  return data as any;
+  return data as TOutput;
 }
 
 async function tryRefresh(): Promise<boolean> {

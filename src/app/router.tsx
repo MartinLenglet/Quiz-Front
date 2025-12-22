@@ -12,7 +12,7 @@ import UpdateThemePage from "@/pages/UpdateThemePage";
 
 import { ProtectedRoute } from "@/features/auth"
 import { ThemeOwnerRoute } from "@/features/themes/components/ThemeOwnerRoute";
-import { GameOwnerRoute } from "@/features/games/components/GameOwnerRoute";
+// import { GameOwnerRoute } from "@/features/games/components/GameOwnerRoute";
 
 export default function AppRoutes() {
   return (

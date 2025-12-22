@@ -51,7 +51,7 @@ export function MyThemeCard({ theme, onEdit }: Props) {
         <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
           <Badge
             className="border-0 text-white"
-            style={{ backgroundColor: theme.category_color_hex }}
+            style={{ backgroundColor: theme.category_color_hex ?? undefined }}
           >
             {theme.category_name}
           </Badge>
@@ -75,8 +75,14 @@ export function MyThemeCard({ theme, onEdit }: Props) {
         <p className="text-sm text-muted-foreground line-clamp-3">{theme.description}</p>
 
         <div className="text-xs text-muted-foreground">
-          Créé le {new Date(theme.created_at).toLocaleString()}
-          {theme.updated_at ? ` • Mis à jour le ${new Date(theme.updated_at).toLocaleString()}` : ""}
+          {theme.created_at
+            ? <>Créé le {new Date(theme.created_at).toLocaleString()}</>
+            : <>Date de création inconnue</>
+          }
+
+          {theme.updated_at
+            ? <> • Mis à jour le {new Date(theme.updated_at).toLocaleString()}</>
+            : null}
         </div>
       </CardContent>
     </Card>

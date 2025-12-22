@@ -1,17 +1,41 @@
 import * as React from "react";
 import { useMemo, useState } from "react";
 
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 import { ThemeCombobox } from "./ThemeCombobox";
 import { MultiSelectCombobox } from "./MultiSelectCombobox";
-import { useBonusQuery, useColorsPublicQuery, useCreateGameMutation, useJokersQuery, useSuggestSetupMutation } from "../services/games.queries";
+import {
+  useBonusQuery,
+  useColorsPublicQuery,
+  useCreateGameMutation,
+  useJokersQuery,
+  useSuggestSetupMutation,
+} from "../services/games.queries";
 import type { GameCreateOut } from "../schemas/games.schemas";
 
 // 👉 à adapter selon ta feature themes existante
@@ -32,6 +56,23 @@ type Props = {
 function randomSeed() {
   // seed int “simple”
   return Math.floor(Date.now() % 2_000_000_000);
+}
+
+function ColorSwatch({
+  hex,
+  label,
+}: {
+  hex?: string | null;
+  label?: string;
+}) {
+  return (
+    <span
+      aria-label={label}
+      title={label}
+      className="inline-block h-4 w-4 rounded-sm border"
+      style={{ backgroundColor: hex ?? undefined }}
+    />
+  );
 }
 
 export function CreateGameModal({ open, onOpenChange, onCreated }: Props) {
@@ -68,8 +109,15 @@ export function CreateGameModal({ open, onOpenChange, onCreated }: Props) {
   const createMutation = useCreateGameMutation();
   const suggestMutation = useSuggestSetupMutation();
 
-  const themesOptions = useMemo(() => themes.map((t: any) => ({ id: t.id, name: t.name })), [themes]);
-  const colorsOptions = useMemo(() => colors.map((c) => ({ id: c.id, label: `${c.name} (${c.hex_code})` })), [colors]);
+  const themesOptions = useMemo(
+    () => themes.map((t: any) => ({ id: t.id, name: t.name })),
+    [themes]
+  );
+
+  const colorsOptions = useMemo(
+    () => colors.map((c: any) => ({ id: c.id, name: c.name, hex: c.hex_code })),
+    [colors]
+  );
 
   const generalThemesOptions = useMemo(
     () => themes.map((t: any) => ({ id: t.id, label: t.name })),
@@ -77,36 +125,56 @@ export function CreateGameModal({ open, onOpenChange, onCreated }: Props) {
   );
 
   const jokersOptions = useMemo(
-    () => jokers.map((j) => ({ id: j.id, label: j.name, description: j.description })),
+    () => jokers.map((j: any) => ({ id: j.id, label: j.name, description: j.description })),
     [jokers]
   );
 
   const bonusOptions = useMemo(
-    () => bonus.map((b) => ({ id: b.id, label: b.name, description: b.description })),
+    () => bonus.map((b: any) => ({ id: b.id, label: b.name, description: b.description })),
     [bonus]
   );
+
+  function getColorById(colorId: number | null) {
+    return colorsOptions.find((c) => c.id === colorId);
+  }
 
   // sync players array size when playersCount changes
   React.useEffect(() => {
     setPlayers((prev) => {
       const next = prev.slice(0, playersCount);
       while (next.length < playersCount) {
-        next.push({ name: `Joueur ${next.length + 1}`, theme_id: null, color_id: null });
+        next.push({
+          name: `Joueur ${next.length + 1}`,
+          theme_id: null,
+          color_id: null,
+        });
       }
       return next;
     });
   }, [playersCount]);
 
   const loadingCatalogs =
-    colorsQuery.isLoading || jokersQuery.isLoading || bonusQuery.isLoading || publicThemesQuery.isLoading;
+    colorsQuery.isLoading ||
+    jokersQuery.isLoading ||
+    bonusQuery.isLoading ||
+    publicThemesQuery.isLoading;
 
   const disabled =
-    loadingCatalogs || colorsQuery.isError || jokersQuery.isError || bonusQuery.isError || publicThemesQuery.isError;
+    loadingCatalogs ||
+    colorsQuery.isError ||
+    jokersQuery.isError ||
+    bonusQuery.isError ||
+    publicThemesQuery.isError;
 
-  const selectedThemeIds = players.map((p) => p.theme_id).filter((x): x is number => typeof x === "number");
-  const hasDuplicateThemes = new Set(selectedThemeIds).size !== selectedThemeIds.length;
+  const selectedThemeIds = players
+    .map((p) => p.theme_id)
+    .filter((x): x is number => typeof x === "number");
+
+  const hasDuplicateThemes =
+    new Set(selectedThemeIds).size !== selectedThemeIds.length;
 
   const canSuggest = selectedThemeIds.length === players.length && !hasDuplicateThemes;
+
   const canCreate =
     !disabled &&
     players.every((p) => p.name.trim().length > 0 && p.theme_id && p.color_id) &&
@@ -117,7 +185,9 @@ export function CreateGameModal({ open, onOpenChange, onCreated }: Props) {
     !hasDuplicateThemes;
 
   function updatePlayer(index: number, patch: Partial<PlayerDraft>) {
-    setPlayers((prev) => prev.map((p, i) => (i === index ? { ...p, ...patch } : p)));
+    setPlayers((prev) =>
+      prev.map((p, i) => (i === index ? { ...p, ...patch } : p))
+    );
   }
 
   async function handleSuggest() {
@@ -158,7 +228,6 @@ export function CreateGameModal({ open, onOpenChange, onCreated }: Props) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="flex max-h-[90vh] max-w-3xl flex-col p-0">
-        
         {/* HEADER (fixe) */}
         <DialogHeader className="border-b px-6 py-4">
           <DialogTitle>Créer une partie</DialogTitle>
@@ -201,55 +270,85 @@ export function CreateGameModal({ open, onOpenChange, onCreated }: Props) {
               <div className="flex items-center justify-between">
                 <h3 className="text-base font-semibold">Joueurs</h3>
                 {hasDuplicateThemes ? (
-                  <span className="text-sm text-destructive">Chaque joueur doit avoir un thème unique.</span>
+                  <span className="text-sm text-destructive">
+                    Chaque joueur doit avoir un thème unique.
+                  </span>
                 ) : null}
               </div>
 
               <div className="space-y-4">
-                {players.map((p, idx) => (
-                  <div key={idx} className="rounded-lg border p-4 space-y-3">
-                    <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-                      <div className="space-y-2">
-                        <Label>Nom</Label>
-                        <Input
-                          value={p.name}
-                          onChange={(e) => updatePlayer(idx, { name: e.target.value })}
-                          disabled={createMutation.isPending}
-                        />
-                      </div>
+                {players.map((p, idx) => {
+                  const selectedColor = getColorById(p.color_id);
 
-                      <div className="space-y-2">
-                        <Label>Thème</Label>
-                        <ThemeCombobox
-                          valueId={p.theme_id}
-                          onChange={(id) => updatePlayer(idx, { theme_id: id })}
-                          options={themesOptions}
-                          disabled={createMutation.isPending}
-                        />
-                      </div>
+                  return (
+                    <div key={idx} className="space-y-3 rounded-lg border p-4">
+                      <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+                        <div className="space-y-2">
+                          <Label>Nom</Label>
+                          <Input
+                            value={p.name}
+                            onChange={(e) =>
+                              updatePlayer(idx, { name: e.target.value })
+                            }
+                            disabled={createMutation.isPending}
+                          />
+                        </div>
 
-                      <div className="space-y-2">
-                        <Label>Couleur</Label>
-                        <Select
-                          value={p.color_id ? String(p.color_id) : ""}
-                          onValueChange={(v) => updatePlayer(idx, { color_id: Number(v) })}
-                          disabled={createMutation.isPending}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Choisir une couleur…" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {colorsOptions.map((c) => (
-                              <SelectItem key={c.id} value={String(c.id)}>
-                                {c.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <div className="space-y-2">
+                          <Label>Thème</Label>
+                          <ThemeCombobox
+                            valueId={p.theme_id}
+                            onChange={(id) => updatePlayer(idx, { theme_id: id })}
+                            options={themesOptions}
+                            disabled={createMutation.isPending}
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label>Couleur</Label>
+                          <Select
+                            value={p.color_id ? String(p.color_id) : ""}
+                            onValueChange={(v) =>
+                              updatePlayer(idx, { color_id: Number(v) })
+                            }
+                            disabled={createMutation.isPending}
+                          >
+                            <SelectTrigger className="justify-between">
+                              <SelectValue placeholder="Choisir une couleur…" asChild>
+                                <div className="flex items-center gap-2">
+                                  <ColorSwatch
+                                    hex={selectedColor?.hex}
+                                    label={
+                                      selectedColor
+                                        ? selectedColor.name
+                                        : "Couleur non sélectionnée"
+                                    }
+                                  />
+                                  <span className="text-sm">
+                                    {selectedColor
+                                      ? selectedColor.name
+                                      : "Choisir une couleur…"}
+                                  </span>
+                                </div>
+                              </SelectValue>
+                            </SelectTrigger>
+
+                            <SelectContent>
+                              {colorsOptions.map((c) => (
+                                <SelectItem key={c.id} value={String(c.id)}>
+                                  <div className="flex items-center gap-2">
+                                    <ColorSwatch hex={c.hex} label={c.name} />
+                                    <span>{c.name}</span>
+                                  </div>
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
 
@@ -261,7 +360,11 @@ export function CreateGameModal({ open, onOpenChange, onCreated }: Props) {
                 type="button"
                 variant="secondary"
                 onClick={handleSuggest}
-                disabled={!canSuggest || suggestMutation.isPending || createMutation.isPending}
+                disabled={
+                  !canSuggest ||
+                  suggestMutation.isPending ||
+                  createMutation.isPending
+                }
               >
                 Suggérer les réglages
               </Button>
@@ -284,7 +387,9 @@ export function CreateGameModal({ open, onOpenChange, onCreated }: Props) {
                           value={questionsByPlayer}
                           min={1}
                           max={50}
-                          onChange={(e) => setQuestionsByPlayer(Number(e.target.value))}
+                          onChange={(e) =>
+                            setQuestionsByPlayer(Number(e.target.value))
+                          }
                           disabled={createMutation.isPending}
                         />
                       </div>
@@ -358,7 +463,11 @@ export function CreateGameModal({ open, onOpenChange, onCreated }: Props) {
                           onChange={(e) => setSeed(Number(e.target.value))}
                           disabled={createMutation.isPending}
                         />
-                        <Button type="button" variant="secondary" onClick={() => setSeed(randomSeed())}>
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          onClick={() => setSeed(randomSeed())}
+                        >
                           Random
                         </Button>
                       </div>
@@ -391,9 +500,13 @@ export function CreateGameModal({ open, onOpenChange, onCreated }: Props) {
             >
               {createMutation.isPending ? "Création…" : "Créer la partie"}
             </Button>
+
             {createMutation.isError ? (
               <div className="text-sm text-destructive">
-                Erreur: {createMutation.error instanceof Error ? createMutation.error.message : "Impossible de créer"}
+                Erreur:{" "}
+                {createMutation.error instanceof Error
+                  ? createMutation.error.message
+                  : "Impossible de créer"}
               </div>
             ) : null}
           </DialogFooter>

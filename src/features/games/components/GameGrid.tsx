@@ -25,7 +25,7 @@ export function GameGrid({ state, colorByPlayerId, onCellClick }: Props) {
   const { ref, size } = useElementSize<HTMLDivElement>();
 
   const gap = 8; // px (doit matcher `gap-2`)
-  const padding = 16; // px (p-4)
+  // const padding = 16; // px (p-4)
 
   const cellSize = React.useMemo(() => {
     const w = size.width;
