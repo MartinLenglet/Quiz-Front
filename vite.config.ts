@@ -9,7 +9,7 @@ export default defineConfig({
   resolve: {
     alias: { "@": path.resolve(__dirname, "./src") },
   },
-  base: "/Quiz-Front/",
+  base: "/",
   server: {
     proxy: {
       "/api": {
@@ -17,11 +17,11 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, "/api/v1"),
       },
-      "/minio": {
-        target: "http://localhost:9000",
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/minio/, ""),
-      },
-    },
+      // "/minio": { # ACCES MINIO PAR LE BACK, donc par nécessaire ici
+      //   target: "http://localhost:9000",
+      //   changeOrigin: true,
+      //   rewrite: (path) => path.replace(/^\/minio/, ""),
+      // },
+    }
   }
 })
