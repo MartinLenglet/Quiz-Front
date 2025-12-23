@@ -36,7 +36,6 @@ export function GameGrid({
   const { rows_number: rows, columns_number: cols } = state.game;
 
   const { ref, size } = useElementSize<HTMLDivElement>();
-
   const gap = 8; // px
 
   const cellSize = React.useMemo(() => {
@@ -44,7 +43,7 @@ export function GameGrid({
     const h = size.height;
     if (!w || !h) return 0;
 
-    const containerPadding = 16 * 2; // p-4
+    const containerPadding = 16 * 2;
     const usableH = h - containerPadding - gap * (rows - 1);
     const usableW = w - containerPadding - gap * (cols - 1);
 
@@ -89,7 +88,6 @@ export function GameGrid({
                 const playerHex = ownerPlayerId ? colorByPlayerId[ownerPlayerId] : undefined;
 
                 const isAnswered = cell.correct_answer || cell.skip_answer || !!cell.round_id;
-
                 const bg = playerHex ? hexToRgba(playerHex, 0.22) : undefined;
                 const border = playerHex ? hexToRgba(playerHex, 0.5) : undefined;
 

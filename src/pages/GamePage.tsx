@@ -40,7 +40,6 @@ function isSelectingJoker(s: JokerSelectionState): s is Exclude<JokerSelectionSt
 }
 
 function computeNextStep(s: Exclude<JokerSelectionState, { step: "idle" }>): JokerTargetStep | "done" {
-  // Si les 2 true => d'abord case (grid), puis joueur
   if (s.requiresGrid && !s.targetGridId) return "pickGrid";
   if (s.requiresPlayer && !s.targetPlayerId) return "pickPlayer";
   return "done";
@@ -60,9 +59,11 @@ export default function GamePage() {
   const [hoverGridId, setHoverGridId] = useState<number | null>(null);
   const [hoverPlayerId, setHoverPlayerId] = useState<number | null>(null);
 
+  // ✅ loader global "action en cours"
+  const [uiBusyLabel, setUiBusyLabel] = useState<string | null>(null);
+
   const jokerTargeting = isSelectingJoker(jokerSel);
 
-  // Question query (ok même si undefined)
   const selectedQuestionId = selectedCell?.question.id;
   const questionQuery = useQuestionByIdQuery(selectedQuestionId, { with_signed_url: true });
   const q = questionQuery.data;
@@ -89,7 +90,6 @@ export default function GamePage() {
   const answerMutation = useAnswerQuestionMutation(gameUrl ?? "");
   const jokerMutation = useUseJokerMutation(gameUrl ?? "");
 
-  // ✅ hooks toujours appelés, même si stateData est undefined
   const colorIdToHex = useMemo(() => {
     const m = new Map<number, string>();
     for (const c of colors) m.set(c.id, c.hex_code);
@@ -118,15 +118,16 @@ export default function GamePage() {
         ? `Joker "${jokerSel.jokerName}" : clique sur une case de la grille, puis sur un joueur.`
         : `Joker "${jokerSel.jokerName}" : clique sur une case de la grille.`;
     }
-
     if (jokerSel.step === "pickPlayer") {
       return `Joker "${jokerSel.jokerName}" : clique sur un joueur.`;
     }
-
     return null;
   }, [jokerTargeting, jokerSel]);
 
-  // ✅ maintenant seulement : rendus conditionnels
+  // ✅ busy global dès qu'une mutation est en cours
+  const mutationsBusy = answerMutation.isPending || jokerMutation.isPending;
+  const uiBusy = mutationsBusy || !!uiBusyLabel;
+
   if (stateQuery.isLoading || colorsQuery.isLoading) {
     return (
       <div className="p-6 sm:p-8 lg:p-12">
@@ -175,7 +176,6 @@ export default function GamePage() {
     );
   }
 
-  // ✅ à partir d’ici state est garanti
   const state = stateData;
 
   function cancelJokerSelection() {
@@ -187,17 +187,22 @@ export default function GamePage() {
   async function submitJokerUse(sel: Exclude<JokerSelectionState, { step: "idle" }>) {
     if (!gameUrl || !currentRoundId) return;
 
-    await jokerMutation.mutateAsync({
-      joker_in_game_id: sel.jokerInGameId,
-      round_id: currentRoundId,
-      target_grid_id: sel.requiresGrid ? (sel.targetGridId ?? null) : null,
-      target_player_id: sel.requiresPlayer ? (sel.targetPlayerId ?? null) : null,
-    });
-
-    cancelJokerSelection();
+    setUiBusyLabel("Application du joker…");
+    try {
+      await jokerMutation.mutateAsync({
+        joker_in_game_id: sel.jokerInGameId,
+        round_id: currentRoundId,
+        target_grid_id: sel.requiresGrid ? (sel.targetGridId ?? null) : null,
+        target_player_id: sel.requiresPlayer ? (sel.targetPlayerId ?? null) : null,
+      });
+      cancelJokerSelection();
+    } finally {
+      setUiBusyLabel(null);
+    }
   }
 
   function handleSelectJoker(j: JokerAvailability) {
+    if (uiBusy) return; // ✅ blocage
     if (!state.current_turn) return;
     if (!j.available) return;
 
@@ -215,13 +220,18 @@ export default function GamePage() {
     const requiresGrid = !!j.joker.requires_target_grid;
     const requiresPlayer = !!j.joker.requires_target_player;
 
-    // aucun target => post direct
+    // aucun target => post direct + loader
     if (!requiresGrid && !requiresPlayer) {
       if (!gameUrl || !currentRoundId) return;
-      void jokerMutation.mutateAsync({
-        joker_in_game_id: j.joker_in_game_id,
-        round_id: currentRoundId,
-      });
+
+      setUiBusyLabel("Application du joker…");
+      void jokerMutation
+        .mutateAsync({
+          joker_in_game_id: j.joker_in_game_id,
+          round_id: currentRoundId,
+        })
+        .finally(() => setUiBusyLabel(null));
+
       return;
     }
 
@@ -243,6 +253,7 @@ export default function GamePage() {
   }
 
   function handleTargetGrid(cell: GridCellOut) {
+    if (uiBusy) return;
     if (!jokerTargeting) return;
     if (jokerSel.step !== "pickGrid") return;
 
@@ -261,6 +272,7 @@ export default function GamePage() {
   }
 
   function handleTargetPlayer(playerId: number) {
+    if (uiBusy) return;
     if (!jokerTargeting) return;
     if (jokerSel.step !== "pickPlayer") return;
 
@@ -279,21 +291,45 @@ export default function GamePage() {
   }
 
   async function submitAnswer(args: { correct: boolean; skip: boolean }) {
+    if (uiBusy) return;
     if (!gameUrl || !currentRoundId || !selectedCell) return;
 
-    await answerMutation.mutateAsync({
-      payload: {
-        round_id: currentRoundId,
-        grid_id: selectedCell.grid_id,
-        correct_answer: args.correct,
-        skip_answer: args.skip,
-      },
-      auto_next_round: true,
-    });
+    setUiBusyLabel("Enregistrement…");
+    try {
+      await answerMutation.mutateAsync({
+        payload: {
+          round_id: currentRoundId,
+          grid_id: selectedCell.grid_id,
+          correct_answer: args.correct,
+          skip_answer: args.skip,
+        },
+        auto_next_round: true,
+      });
+      // la modal se ferme automatiquement via `autoCloseOnAction`,
+      // mais on reset la sélection au cas où
+      setSelectedCell(null);
+    } finally {
+      setUiBusyLabel(null);
+    }
   }
 
+  // interactions désactivées pendant:
+  // - ciblage joker (verrouillage grid/scoreboard selon étape)
+  // - mutation en cours (uiBusy)
+  const disableAll = uiBusy;
+
   return (
-    <div className="flex min-h-[100dvh] flex-col gap-6 p-6 sm:p-8 lg:p-12">
+    <div className="relative flex min-h-[100dvh] flex-col gap-6 p-6 sm:p-8 lg:p-12">
+      {/* ✅ Overlay loader global */}
+      {uiBusy ? (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/60 backdrop-blur-sm">
+          <div className="flex items-center gap-3 rounded-lg border bg-background px-4 py-3 shadow">
+            <div className="h-4 w-4 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />
+            <div className="text-sm">{uiBusyLabel ?? "Chargement…"}</div>
+          </div>
+        </div>
+      ) : null}
+
       <div className="shrink-0 space-y-2">
         <div className="flex flex-col gap-2">
           <h1 className="text-2xl font-semibold">Partie : {state.game.url}</h1>
@@ -306,7 +342,7 @@ export default function GamePage() {
         <GameTurnHeader
           state={state}
           onSelectJoker={handleSelectJoker}
-          disabled={jokersOrAnswersPending(jokerMutation.isPending, answerMutation.isPending)}
+          disabled={disableAll || jokersOrAnswersPending(jokerMutation.isPending, answerMutation.isPending)}
           targeting={jokerTargeting}
           selectedJokerInGameId={jokerTargeting ? jokerSel.jokerInGameId : null}
         />
@@ -315,7 +351,7 @@ export default function GamePage() {
           <div className="rounded-lg border p-3 text-sm">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <div>{jokerHint}</div>
-              <Button type="button" variant="outline" onClick={cancelJokerSelection}>
+              <Button type="button" variant="outline" onClick={cancelJokerSelection} disabled={disableAll}>
                 Annuler
               </Button>
             </div>
@@ -332,8 +368,10 @@ export default function GamePage() {
               targetingMode={jokerTargeting && jokerSel.step === "pickGrid"}
               hoveredGridId={hoverGridId}
               onCellHover={(cellOrNull) => setHoverGridId(cellOrNull?.grid_id ?? null)}
-              interactionsDisabled={jokerTargeting && jokerSel.step === "pickPlayer"}
+              interactionsDisabled={disableAll || (jokerTargeting && jokerSel.step === "pickPlayer")}
               onCellClick={(cell) => {
+                if (disableAll) return;
+
                 if (jokerTargeting) {
                   if (jokerSel.step === "pickGrid") handleTargetGrid(cell);
                   return;
@@ -352,7 +390,7 @@ export default function GamePage() {
             hoveredPlayerId={hoverPlayerId}
             onPlayerHover={(id) => setHoverPlayerId(id)}
             onPlayerClick={(id) => handleTargetPlayer(id)}
-            interactionsDisabled={jokerTargeting && jokerSel.step === "pickGrid"}
+            interactionsDisabled={disableAll || (jokerTargeting && jokerSel.step === "pickGrid")}
           />
         </div>
       </div>
@@ -371,6 +409,8 @@ export default function GamePage() {
         onGoodAnswer={() => submitAnswer({ correct: true, skip: false })}
         onBadAnswer={() => submitAnswer({ correct: false, skip: false })}
         onCancelQuestion={() => submitAnswer({ correct: false, skip: true })}
+        // ✅ bonus UX: on pourrait aussi désactiver les boutons de la modal si busy,
+        // mais on a déjà l'overlay global.
       />
 
       {answerMutation.isError || jokerMutation.isError ? (

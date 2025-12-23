@@ -38,7 +38,7 @@ export function GameTurnHeader({
             const isSelected = selectedJokerInGameId === j.joker_in_game_id;
 
             const lockOthers = !!targeting && !isSelected;
-            const isDisabled = disabled || !turn || !j.available || lockOthers;
+            const isDisabled = !!disabled || !turn || !j.available || lockOthers;
 
             return (
               <Tooltip key={j.joker_in_game_id}>

@@ -30,7 +30,7 @@ export function GameScoreboard({
     <div className={cn("rounded-lg border p-4", disabled ? "opacity-75" : null)}>
       <div className="mb-3 text-base font-semibold">Scores</div>
 
-      <div className="space-y-2">
+      <div className={cn("space-y-2", disabled ? "pointer-events-none" : null)}>
         {sorted.map((p) => {
           const points = state.scores[String(p.id)] ?? 0;
           const hex = colorByPlayerId[p.id];
