@@ -1,4 +1,4 @@
-import logo from "@/assets/logo_detoure.png";
+import logo from "@/assets/logo_banquiz.png";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
@@ -47,7 +47,7 @@ export function Navbar() {
       <div className="container mx-auto flex items-center justify-between py-3 px-4">
         {/* Logo */}
         <Link to="/" className="text-xl font-bold">
-          <img src={logo} alt="Quiz Logo" className="h-8 w-8" />
+          <img src={logo} alt="Banquiz Logo" className="h-8 w-8" />
         </Link>
 
         {/* Menu desktop */}
