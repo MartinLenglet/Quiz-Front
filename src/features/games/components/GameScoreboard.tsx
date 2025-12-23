@@ -1,15 +1,33 @@
+import { cn } from "@/lib/utils";
 import type { GameStateOut } from "@/features/games/schemas/games.schemas";
 
 type Props = {
   state: GameStateOut;
   colorByPlayerId: Record<number, string | undefined>;
+
+  targetingPlayer?: boolean;
+  hoveredPlayerId?: number | null;
+  onPlayerHover?: (playerId: number | null) => void;
+  onPlayerClick?: (playerId: number) => void;
+
+  interactionsDisabled?: boolean;
 };
 
-export function GameScoreboard({ state, colorByPlayerId }: Props) {
+export function GameScoreboard({
+  state,
+  colorByPlayerId,
+  targetingPlayer,
+  hoveredPlayerId,
+  onPlayerHover,
+  onPlayerClick,
+  interactionsDisabled,
+}: Props) {
   const sorted = state.players.slice().sort((a, b) => a.order - b.order);
 
+  const disabled = !!interactionsDisabled;
+
   return (
-    <div className="rounded-lg border p-4">
+    <div className={cn("rounded-lg border p-4", disabled ? "opacity-75" : null)}>
       <div className="mb-3 text-base font-semibold">Scores</div>
 
       <div className="space-y-2">
@@ -17,10 +35,32 @@ export function GameScoreboard({ state, colorByPlayerId }: Props) {
           const points = state.scores[String(p.id)] ?? 0;
           const hex = colorByPlayerId[p.id];
 
+          const isHovered = !!targetingPlayer && hoveredPlayerId === p.id;
+          const clickable = !!targetingPlayer && !disabled;
+
           return (
             <div
               key={p.id}
-              className="flex items-center justify-between rounded-md border px-3 py-2"
+              role={clickable ? "button" : undefined}
+              tabIndex={clickable ? 0 : -1}
+              onMouseEnter={() => onPlayerHover?.(p.id)}
+              onMouseLeave={() => onPlayerHover?.(null)}
+              onClick={() => {
+                if (!clickable) return;
+                onPlayerClick?.(p.id);
+              }}
+              onKeyDown={(e) => {
+                if (!clickable) return;
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  onPlayerClick?.(p.id);
+                }
+              }}
+              className={cn(
+                "flex items-center justify-between rounded-md border px-3 py-2 transition",
+                clickable ? "cursor-pointer hover:brightness-105" : null,
+                isHovered ? "ring-2 ring-offset-2" : null
+              )}
               style={hex ? { borderColor: hex } : undefined}
             >
               <div className="flex items-center gap-2">

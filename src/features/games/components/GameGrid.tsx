@@ -7,6 +7,12 @@ type Props = {
   state: GameStateOut;
   colorByPlayerId: Record<number, string | undefined>;
   onCellClick: (cell: GridCellOut) => void;
+
+  targetingMode?: boolean;
+  hoveredGridId?: number | null;
+  onCellHover?: (cell: GridCellOut | null) => void;
+
+  interactionsDisabled?: boolean;
 };
 
 function hexToRgba(hex: string, alpha: number) {
@@ -18,55 +24,57 @@ function hexToRgba(hex: string, alpha: number) {
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
-export function GameGrid({ state, colorByPlayerId, onCellClick }: Props) {
+export function GameGrid({
+  state,
+  colorByPlayerId,
+  onCellClick,
+  targetingMode,
+  hoveredGridId,
+  onCellHover,
+  interactionsDisabled,
+}: Props) {
   const { rows_number: rows, columns_number: cols } = state.game;
 
-  // slot qui définit l'espace dispo pour la grille
   const { ref, size } = useElementSize<HTMLDivElement>();
 
-  const gap = 8; // px (doit matcher `gap-2`)
-  // const padding = 16; // px (p-4)
+  const gap = 8; // px
 
   const cellSize = React.useMemo(() => {
     const w = size.width;
     const h = size.height;
     if (!w || !h) return 0;
 
-    // espace réellement utilisable en retirant padding + gaps
-    const containerPadding = 16 * 2; // p-4 top + bottom
+    const containerPadding = 16 * 2; // p-4
     const usableH = h - containerPadding - gap * (rows - 1);
     const usableW = w - containerPadding - gap * (cols - 1);
 
     const byW = usableW / cols;
     const byH = usableH / rows;
 
-    // évite des cases trop petites
     const minPx = 36;
     return Math.max(minPx, Math.floor(Math.min(byW, byH)));
   }, [size.width, size.height, rows, cols]);
 
-  // Map (row,col) -> cell
   const cellMap = new Map<string, GridCellOut>();
   for (const c of state.grid) cellMap.set(`${c.row}:${c.column}`, c);
 
-  // thème_id -> player_id
   const themeToPlayerId = new Map<number, number>();
   for (const p of state.players) themeToPlayerId.set(p.theme_id, p.id);
 
+  const gridDisabled = !!interactionsDisabled;
+
   return (
-    // IMPORTANT: ce wrapper DOIT pouvoir grandir/rapetisser (min-h-0)
     <div ref={ref} className="h-full min-h-0">
       <div className="h-full rounded-lg border p-4">
-        {/* si on n'a pas encore mesuré, on affiche un placeholder minimal */}
         {cellSize === 0 ? (
           <div className="h-full w-full rounded-md bg-muted/20" />
         ) : (
           <div
-            className="grid gap-2"
+            className={cn("grid gap-2", gridDisabled ? "pointer-events-none opacity-75" : null)}
             style={{
               gridTemplateColumns: `repeat(${cols}, ${cellSize}px)`,
               gridAutoRows: `${cellSize}px`,
-              justifyContent: "center", // centre si l’espace restant > grille
+              justifyContent: "center",
               alignContent: "center",
             }}
           >
@@ -74,20 +82,18 @@ export function GameGrid({ state, colorByPlayerId, onCellClick }: Props) {
               Array.from({ length: cols }).map((__, col) => {
                 const cell = cellMap.get(`${row}:${col}`);
                 if (!cell) {
-                  return (
-                    <div
-                      key={`${row}-${col}`}
-                      className="rounded-md border bg-muted/30"
-                    />
-                  );
+                  return <div key={`${row}-${col}`} className="rounded-md border bg-muted/30" />;
                 }
 
                 const ownerPlayerId = themeToPlayerId.get(cell.question.theme.id);
                 const playerHex = ownerPlayerId ? colorByPlayerId[ownerPlayerId] : undefined;
 
                 const isAnswered = cell.correct_answer || cell.skip_answer || !!cell.round_id;
+
                 const bg = playerHex ? hexToRgba(playerHex, 0.22) : undefined;
                 const border = playerHex ? hexToRgba(playerHex, 0.5) : undefined;
+
+                const isHovered = !!targetingMode && hoveredGridId === cell.grid_id;
 
                 return (
                   <button
@@ -95,9 +101,13 @@ export function GameGrid({ state, colorByPlayerId, onCellClick }: Props) {
                     type="button"
                     onClick={() => onCellClick(cell)}
                     disabled={isAnswered}
+                    onMouseEnter={() => onCellHover?.(cell)}
+                    onMouseLeave={() => onCellHover?.(null)}
                     className={cn(
                       "h-full w-full rounded-md border p-2 text-left transition",
-                      "hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-50"
+                      "hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-50",
+                      targetingMode ? "cursor-crosshair" : null,
+                      isHovered ? "ring-2 ring-offset-2" : null
                     )}
                     style={{ background: bg, borderColor: border }}
                     title={cell.question.theme.name}

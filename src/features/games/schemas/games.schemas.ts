@@ -168,6 +168,8 @@ export const jokerAvailabilityOutSchema = z.object({
     id: z.number().int(),
     name: z.string(),
     description: z.string(),
+    requires_target_player: z.boolean(),
+    requires_target_grid: z.boolean(),
   }),
   available: z.boolean(),
 });
@@ -186,7 +188,9 @@ export const gameStateOutSchema = z.object({
   players: z.array(gameStatePlayerSchema),
   grid: z.array(gridCellOutSchema),
   current_turn: currentTurnOutSchema.nullable(),
-  available_jokers: z.array(jokerAvailabilityOutSchema).default([]),
+  available_jokers: z
+    .record(z.string(), z.array(jokerAvailabilityOutSchema))
+    .default({}),
   bonus: z.array(bonusInGameOutSchema).default([]),
   scores: z.record(z.string(), z.coerce.number().int()),
   finished: z.boolean().optional().default(false),
