@@ -55,6 +55,50 @@ function buildBlankQuestions(count: number): QuestionDraft[] {
   }));
 }
 
+function mergeSignedUrlsIntoQuestions(
+  prev: QuestionDraft[],
+  theme: ThemeDetailJoinWithSignedUrlOut,
+  defaultQuestionsCount: number
+): QuestionDraft[] {
+  const fromServer = new Map(
+    (theme.questions ?? []).map((q) => [q.id, q])
+  );
+
+  const merged = prev.map((draft) => {
+    if (!draft.backendId) return draft; // blank question ou pas encore liée au backend
+
+    const serverQ = fromServer.get(draft.backendId);
+    if (!serverQ) return draft;
+
+    return {
+      ...draft,
+
+      // ✅ ne rafraîchir les URLs que si l'utilisateur n'a pas choisi un nouveau fichier
+      existingQuestionImageUrl: draft.questionImage ? draft.existingQuestionImageUrl : (serverQ.question_image_signed_url ?? draft.existingQuestionImageUrl ?? null),
+      existingAnswerImageUrl: draft.answerImage ? draft.existingAnswerImageUrl : (serverQ.answer_image_signed_url ?? draft.existingAnswerImageUrl ?? null),
+
+      existingQuestionAudioUrl: draft.questionAudio ? draft.existingQuestionAudioUrl : (serverQ.question_audio_signed_url ?? draft.existingQuestionAudioUrl ?? null),
+      existingAnswerAudioUrl: draft.answerAudio ? draft.existingAnswerAudioUrl : (serverQ.answer_audio_signed_url ?? draft.existingAnswerAudioUrl ?? null),
+
+      existingQuestionVideoUrl: draft.questionVideo ? draft.existingQuestionVideoUrl : (serverQ.question_video_signed_url ?? draft.existingQuestionVideoUrl ?? null),
+      existingAnswerVideoUrl: draft.answerVideo ? draft.existingAnswerVideoUrl : (serverQ.answer_video_signed_url ?? draft.existingAnswerVideoUrl ?? null),
+
+      // IDs : en général stables, mais on peut les garder tels quels (ou resync si tu veux)
+      existingQuestionImageId: serverQ.question_image_id ?? draft.existingQuestionImageId ?? null,
+      existingAnswerImageId: serverQ.answer_image_id ?? draft.existingAnswerImageId ?? null,
+      existingQuestionAudioId: serverQ.question_audio_id ?? draft.existingQuestionAudioId ?? null,
+      existingAnswerAudioId: serverQ.answer_audio_id ?? draft.existingAnswerAudioId ?? null,
+      existingQuestionVideoId: serverQ.question_video_id ?? draft.existingQuestionVideoId ?? null,
+      existingAnswerVideoId: serverQ.answer_video_id ?? draft.existingAnswerVideoId ?? null,
+    };
+  });
+
+  // ✅ si le serveur a moins de questions que le default, on conserve la taille (comme avant)
+  return merged.length >= defaultQuestionsCount
+    ? merged
+    : [...merged, ...buildBlankQuestions(defaultQuestionsCount - merged.length)];
+}
+
 export function UpdateThemeForm({
   themeId,
   theme,
@@ -90,9 +134,25 @@ export function UpdateThemeForm({
 
   const [formError, setFormError] = React.useState<string | null>(null);
   const [successMessage, setSuccessMessage] = React.useState<string | null>(null);
+  
+  const didInitRef = React.useRef(false);
+  const lastThemeIdRef = React.useRef<number | null>(null);
 
+  // (A) Reset du "flag init" quand on change de themeId (navigation vers un autre thème)
+  React.useEffect(() => {
+    if (themeId !== lastThemeIdRef.current) {
+      didInitRef.current = false;
+      lastThemeIdRef.current = themeId;
+
+      // optionnel : remettre un état "blank" pendant le chargement d’un autre thème
+      setQuestions(buildBlankQuestions(defaultQuestionsCount));
+    }
+  }, [themeId, defaultQuestionsCount]);
+
+  // (B) Initialisation du formulaire UNE SEULE FOIS quand on reçoit le thème
   React.useEffect(() => {
     if (!theme) return;
+    if (didInitRef.current) return;
 
     setName(theme.name ?? "");
     setDescription(theme.description ?? "");
@@ -100,7 +160,6 @@ export function UpdateThemeForm({
     setIsPublic(Boolean(theme.is_public));
     setIsReady(Boolean(theme.is_ready));
 
-    // file inputs cannot be pre-filled
     setCoverImage(null);
     setExistingCoverImageId(theme.image_id ?? null);
 
@@ -112,7 +171,6 @@ export function UpdateThemeForm({
       answerText: q.answer ?? "",
       points: q.points ?? 1,
 
-      // new files (empty by default)
       questionImage: null,
       questionAudio: null,
       questionVideo: null,
@@ -120,7 +178,6 @@ export function UpdateThemeForm({
       answerAudio: null,
       answerVideo: null,
 
-      // existing urls (previews)
       existingQuestionImageUrl: q.question_image_signed_url ?? null,
       existingAnswerImageUrl: q.answer_image_signed_url ?? null,
       existingQuestionAudioUrl: q.question_audio_signed_url ?? null,
@@ -128,7 +185,6 @@ export function UpdateThemeForm({
       existingQuestionVideoUrl: q.question_video_signed_url ?? null,
       existingAnswerVideoUrl: q.answer_video_signed_url ?? null,
 
-      // existing ids (PATCH needs those)
       existingQuestionImageId: q.question_image_id ?? null,
       existingAnswerImageId: q.answer_image_id ?? null,
       existingQuestionAudioId: q.question_audio_id ?? null,
@@ -143,7 +199,23 @@ export function UpdateThemeForm({
         : [...mapped, ...buildBlankQuestions(defaultQuestionsCount - mapped.length)];
 
     setQuestions(padded);
+
+    didInitRef.current = true;
   }, [theme, defaultQuestionsCount]);
+
+  // (C) Rafraîchissement des signed URLs à chaque refetch, sans toucher aux edits
+  React.useEffect(() => {
+    if (!theme) return;
+    if (!didInitRef.current) return;
+
+    setQuestions((prev) =>
+      mergeSignedUrlsIntoQuestions(prev, theme, defaultQuestionsCount)
+    );
+
+    // Cover: on ne touche PAS au File local, mais on peut sync l'id existant
+    setExistingCoverImageId((prev) => prev ?? theme.image_id ?? null);
+  }, [theme?.image_signed_url, theme?.questions, defaultQuestionsCount]);
+
 
   function updateQuestion(id: string, patch: Partial<QuestionDraft>) {
     setQuestions((prev) => prev.map((q) => (q.id === id ? { ...q, ...patch } : q)));
