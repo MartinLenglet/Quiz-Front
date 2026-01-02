@@ -1,5 +1,6 @@
 import * as React from "react";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
@@ -118,20 +119,32 @@ export function UpdateThemeQuestion({
           <CardTitle className="text-base">Question</CardTitle>
         </CardHeader>
 
-        <CardContent className="grid gap-6 lg:grid-cols-2">
+        <CardContent className="grid gap-6 lg:grid-cols-2 min-h-[260px] items-stretch">
           {/* LEFT — texte */}
-          <div className="space-y-4">
-            <div className="grid gap-4 sm:grid-cols-3">
-              <div className="space-y-2 sm:col-span-2">
+          <div className="flex flex-col h-full min-h-0">
+            <div className="grid gap-4 sm:grid-cols-[1fr_120px] items-stretch flex-1 min-h-0">
+              {/* Texte */}
+              <div className="flex flex-col gap-2 min-h-0">
                 <Label>Texte</Label>
-                <Input
+                <Textarea
                   value={question.questionText}
                   onChange={(e) => onChange({ questionText: e.target.value })}
                   placeholder="Ex: Qui a réalisé Inception ?"
+                  className="
+                    flex-1
+                    min-h-[140px]
+                    sm:min-h-[160px]
+                    md:min-h-0
+                    resize-none
+                    leading-relaxed
+                    whitespace-pre-wrap
+                    break-words
+                  "
                 />
               </div>
 
-              <div className="space-y-2">
+              {/* Points */}
+              <div className="flex flex-col gap-2">
                 <Label>Points</Label>
                 <Input
                   type="number"
@@ -193,14 +206,24 @@ export function UpdateThemeQuestion({
           <CardTitle className="text-base">Réponse</CardTitle>
         </CardHeader>
 
-        <CardContent className="grid gap-6 lg:grid-cols-2">
+        <CardContent className="grid gap-6 lg:grid-cols-2 min-h-[260px] items-stretch">
           {/* LEFT — texte */}
-          <div className="space-y-2">
+          <div className="flex flex-col gap-4 h-full">
             <Label>Texte</Label>
-            <Input
+            <Textarea
               value={question.answerText}
               onChange={(e) => onChange({ answerText: e.target.value })}
               placeholder="Ex: Christopher Nolan"
+              className="
+                flex-1
+                min-h-[140px]
+                sm:min-h-[160px]
+                md:min-h-0
+                resize-none
+                leading-relaxed
+                whitespace-pre-wrap
+                break-words
+              "
             />
           </div>
 
