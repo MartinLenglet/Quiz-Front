@@ -119,7 +119,7 @@ export function UpdateThemeQuestion({
           <CardTitle className="text-base">Question</CardTitle>
         </CardHeader>
 
-        <CardContent className="grid gap-6 lg:grid-cols-2 min-h-[260px] items-stretch">
+        <CardContent className="grid gap-6 lg:grid-cols-2 lg:min-h-[260px] lg:items-stretch">
           {/* LEFT — texte */}
           <div className="flex flex-col h-full min-h-0">
             <div className="grid gap-4 sm:grid-cols-[1fr_120px] items-stretch flex-1 min-h-0">
@@ -134,7 +134,7 @@ export function UpdateThemeQuestion({
                     flex-1
                     min-h-[140px]
                     sm:min-h-[160px]
-                    md:min-h-0
+                    lg:min-h-0
                     resize-none
                     leading-relaxed
                     whitespace-pre-wrap
@@ -206,9 +206,9 @@ export function UpdateThemeQuestion({
           <CardTitle className="text-base">Réponse</CardTitle>
         </CardHeader>
 
-        <CardContent className="grid gap-6 lg:grid-cols-2 min-h-[260px] items-stretch">
+        <CardContent className="grid gap-6 lg:grid-cols-2 lg:min-h-[260px] lg:items-stretch">
           {/* LEFT — texte */}
-          <div className="flex flex-col gap-4 h-full">
+          <div className="flex flex-col gap-4 h-full min-h-0">
             <Label>Texte</Label>
             <Textarea
               value={question.answerText}
@@ -218,7 +218,7 @@ export function UpdateThemeQuestion({
                 flex-1
                 min-h-[140px]
                 sm:min-h-[160px]
-                md:min-h-0
+                lg:min-h-0
                 resize-none
                 leading-relaxed
                 whitespace-pre-wrap
