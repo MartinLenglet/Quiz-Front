@@ -32,7 +32,7 @@ export function CategoryRow({ title, items }: { title: string; items: RowItem[] 
               key={item.id}
               className="
                 cursor-pointer overflow-hidden
-                min-w-[72vw] max-w-[72vw]
+                min-w-[clamp(180px,60vw,240px)] max-w-[clamp(180px,60vw,240px)]
                 sm:min-w-[240px] sm:max-w-[240px]
                 md:min-w-[260px] md:max-w-[260px]
                 h-[270px] sm:h-[290px]
