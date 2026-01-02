@@ -10,6 +10,8 @@ export function usePublicThemes(params: ListPublicThemesParams) {
     staleTime: 5 * 60_000,          // ex: 5 min
     refetchInterval: 4 * 60_000,    // ex: 4 min (avant staleTime/TTL)
     refetchIntervalInBackground: true,
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
   });
 }
 
