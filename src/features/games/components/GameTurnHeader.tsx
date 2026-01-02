@@ -56,11 +56,11 @@ export function GameTurnHeader({
 
                 <TooltipContent className="max-w-sm">
                   <div className="space-y-1">
-                    <div className="font-medium">{j.joker.name}</div>
-                    <div className="text-sm text-muted-foreground">{j.joker.description}</div>
+                    <div className="text-md">{j.joker.name}</div>
+                    <div className="text-sm">{j.joker.description}</div>
 
                     {j.joker.requires_target_grid || j.joker.requires_target_player ? (
-                      <div className="text-xs text-muted-foreground">
+                      <div className="text-xs">
                         Cible :{" "}
                         {j.joker.requires_target_grid ? "case" : null}
                         {j.joker.requires_target_grid && j.joker.requires_target_player ? " + " : null}
@@ -68,9 +68,9 @@ export function GameTurnHeader({
                       </div>
                     ) : null}
 
-                    {!j.available ? <div className="text-xs text-muted-foreground">Déjà utilisé</div> : null}
+                    {!j.available ? <div className="text-xs">Déjà utilisé</div> : null}
                     {targeting && isSelected ? (
-                      <div className="text-xs text-muted-foreground">Reclique pour annuler</div>
+                      <div className="text-xs">Reclique pour annuler</div>
                     ) : null}
                   </div>
                 </TooltipContent>

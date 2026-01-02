@@ -37,6 +37,7 @@ type Props = {
   onGoodAnswer?: () => void;
   onBadAnswer?: () => void;
   onCancelQuestion?: () => void;
+  onRevealAnswer?: () => void | Promise<void>;
 };
 
 function MediaPanel({ media }: { media?: Media }) {
@@ -85,8 +86,10 @@ export function DisplayQuestionModal({
   onGoodAnswer,
   onBadAnswer,
   onCancelQuestion,
+  onRevealAnswer,
 }: Props) {
   const [showAnswer, setShowAnswer] = React.useState(false);
+  const [revealBusy, setRevealBusy] = React.useState(false);
 
   React.useEffect(() => {
     if (open) setShowAnswer(false);
@@ -159,8 +162,20 @@ export function DisplayQuestionModal({
         <DialogFooter className="pt-4">
           {!showAnswer ? (
             <div className="w-full flex justify-center">
-              <Button type="button" onClick={() => setShowAnswer(true)}>
-                Afficher la réponse
+              <Button
+                type="button"
+                disabled={revealBusy}
+                onClick={async () => {
+                  setRevealBusy(true);
+                  try {
+                    await onRevealAnswer?.();
+                    setShowAnswer(true);
+                  } finally {
+                    setRevealBusy(false);
+                  }
+                }}
+              >
+                {revealBusy ? "Chargement…" : "Afficher la réponse"}
               </Button>
             </div>
           ) : (

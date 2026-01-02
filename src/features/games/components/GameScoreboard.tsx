@@ -26,6 +26,8 @@ export function GameScoreboard({
 
   const disabled = !!interactionsDisabled;
 
+  const currentPlayerId = state.current_turn?.player.id ?? null;
+
   return (
     <div className={cn("rounded-lg border p-4", disabled ? "opacity-75" : null)}>
       <div className="mb-3 text-base font-semibold">Scores</div>
@@ -37,6 +39,8 @@ export function GameScoreboard({
 
           const isHovered = !!targetingPlayer && hoveredPlayerId === p.id;
           const clickable = !!targetingPlayer && !disabled;
+
+          const isCurrentPlayer = p.id === currentPlayerId;
 
           return (
             <div
@@ -59,9 +63,30 @@ export function GameScoreboard({
               className={cn(
                 "flex items-center justify-between rounded-md border px-3 py-2 transition",
                 clickable ? "cursor-pointer hover:brightness-105" : null,
-                isHovered ? "ring-2 ring-offset-2" : null
+
+                // 🔵 Joueur dont c’est le tour
+                isCurrentPlayer ? "ring-2 ring-offset-2" : null,
+
+                // 🎯 Hover lors du ciblage joker (plus léger)
+                isHovered && !isCurrentPlayer ? "brightness-110" : null
               )}
-              style={hex ? { borderColor: hex } : undefined}
+              style={
+                hex
+                  ? {
+                      borderColor: hex,
+
+                      ...(isCurrentPlayer
+                        ? {
+                            // ring couleur joueur
+                            ["--tw-ring-color" as any]: hex,
+
+                            // background très léger (8% environ)
+                            backgroundColor: `${hex}14`,
+                          }
+                        : null),
+                    }
+                  : undefined
+              }
             >
               <div className="flex items-center gap-2">
                 <span

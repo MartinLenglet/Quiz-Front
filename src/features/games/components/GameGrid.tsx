@@ -103,7 +103,7 @@ export function GameGrid({
                     onMouseLeave={() => onCellHover?.(null)}
                     className={cn(
                       "h-full w-full rounded-md border p-2 text-left transition",
-                      "hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-50",
+                      "hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-20",
                       targetingMode ? "cursor-crosshair" : null,
                       isHovered ? "ring-2 ring-offset-2" : null
                     )}

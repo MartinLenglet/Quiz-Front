@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -11,6 +12,7 @@ import {
 } from "@/features/games/services/games.queries";
 import { useQuestionByIdQuery } from "@/features/questions/services/questions.queries";
 import type { GridCellOut, GameStateOut } from "@/features/games/schemas/games.schemas";
+import { questionsKeys } from "@/features/questions/services/questions.queries";
 
 import { GameTurnHeader } from "@/features/games/components/GameTurnHeader";
 import { GameGrid } from "@/features/games/components/GameGrid";
@@ -66,6 +68,20 @@ export default function GamePage() {
 
   const selectedQuestionId = selectedCell?.question.id;
   const questionQuery = useQuestionByIdQuery(selectedQuestionId, { with_signed_url: true });
+  const queryClient = useQueryClient();
+
+  async function refreshSignedUrlsForCurrentQuestionIfStale(maxAgeMs = 30_000) {
+    if (typeof selectedQuestionId !== "number") return;
+
+    const key = questionsKeys.byId(selectedQuestionId, true);
+    const qs = queryClient.getQueryState(key);
+    const age = qs?.dataUpdatedAt ? Date.now() - qs.dataUpdatedAt : Infinity;
+
+    if (age > maxAgeMs) {
+      await queryClient.invalidateQueries({ queryKey: key, refetchType: "active" });
+    }
+  }
+
   const q = questionQuery.data;
 
   const questionText = q?.question ?? (selectedCell ? "Chargement…" : "");
@@ -331,14 +347,6 @@ export default function GamePage() {
       ) : null}
 
       <div className="shrink-0 space-y-2">
-        <div className="flex flex-col gap-2">
-          <h1 className="text-2xl font-semibold">Partie : {state.game.url}</h1>
-          <div className="text-sm text-muted-foreground">
-            Grille {state.game.rows_number}×{state.game.columns_number} ·{" "}
-            {state.game.finished ? "Terminée" : "En cours"}
-          </div>
-        </div>
-
         <GameTurnHeader
           state={state}
           onSelectJoker={handleSelectJoker}
@@ -409,8 +417,7 @@ export default function GamePage() {
         onGoodAnswer={() => submitAnswer({ correct: true, skip: false })}
         onBadAnswer={() => submitAnswer({ correct: false, skip: false })}
         onCancelQuestion={() => submitAnswer({ correct: false, skip: true })}
-        // ✅ bonus UX: on pourrait aussi désactiver les boutons de la modal si busy,
-        // mais on a déjà l'overlay global.
+        onRevealAnswer={refreshSignedUrlsForCurrentQuestionIfStale}
       />
 
       {answerMutation.isError || jokerMutation.isError ? (
