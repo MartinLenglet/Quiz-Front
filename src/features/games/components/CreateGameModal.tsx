@@ -100,6 +100,12 @@ export function CreateGameModal({ open, onOpenChange, onCreated }: Props) {
 
   // Thèmes (public)
   const publicThemesQuery = usePublicThemes({ offset: 0, limit: 200 });
+  React.useEffect(() => { // Assure que la liste des thèmes publiques est à jour quand on crée une nouvelle partie
+    if (open) {
+      publicThemesQuery.refetch();
+    }
+  }, [open, publicThemesQuery]);
+
   const themes = publicThemesQuery.data ?? [];
 
   const colors = colorsQuery.data ?? [];

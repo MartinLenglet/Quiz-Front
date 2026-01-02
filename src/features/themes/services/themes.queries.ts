@@ -7,7 +7,9 @@ export function usePublicThemes(params: ListPublicThemesParams) {
   return useQuery({
     queryKey: ["themes", "public", params],
     queryFn: () => listPublicThemes(params),
-    staleTime: 30_000, // utile car URLs signées peuvent expirer
+    staleTime: 5 * 60_000,          // ex: 5 min
+    refetchInterval: 4 * 60_000,    // ex: 4 min (avant staleTime/TTL)
+    refetchIntervalInBackground: true,
   });
 }
 
