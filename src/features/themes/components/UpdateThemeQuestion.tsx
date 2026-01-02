@@ -121,8 +121,8 @@ export function UpdateThemeQuestion({
 
         <CardContent className="grid gap-6 lg:grid-cols-2 lg:min-h-[260px] lg:items-stretch">
           {/* LEFT — texte */}
-          <div className="flex flex-col h-full min-h-0">
-            <div className="grid gap-4 sm:grid-cols-[1fr_120px] items-stretch flex-1 min-h-0">
+          <div className="flex flex-col lg:h-full lg:min-h-0">
+            <div className="grid gap-4 sm:grid-cols-[1fr_120px] lg:items-stretch lg:flex-1 lg:min-h-0">
               {/* Texte */}
               <div className="flex flex-col gap-2 min-h-0">
                 <Label>Texte</Label>
@@ -131,9 +131,10 @@ export function UpdateThemeQuestion({
                   onChange={(e) => onChange({ questionText: e.target.value })}
                   placeholder="Ex: Qui a réalisé Inception ?"
                   className="
-                    flex-1
+                    flex-none
                     min-h-[140px]
                     sm:min-h-[160px]
+                    lg:flex-1
                     lg:min-h-0
                     resize-none
                     leading-relaxed
@@ -208,16 +209,17 @@ export function UpdateThemeQuestion({
 
         <CardContent className="grid gap-6 lg:grid-cols-2 lg:min-h-[260px] lg:items-stretch">
           {/* LEFT — texte */}
-          <div className="flex flex-col gap-4 h-full min-h-0">
+          <div className="flex flex-col gap-4 lg:h-full lg:min-h-0">
             <Label>Texte</Label>
             <Textarea
               value={question.answerText}
               onChange={(e) => onChange({ answerText: e.target.value })}
               placeholder="Ex: Christopher Nolan"
               className="
-                flex-1
+                flex-none
                 min-h-[140px]
                 sm:min-h-[160px]
+                lg:flex-1
                 lg:min-h-0
                 resize-none
                 leading-relaxed
