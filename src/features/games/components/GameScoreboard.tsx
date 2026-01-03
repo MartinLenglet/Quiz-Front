@@ -28,6 +28,9 @@ export function GameScoreboard({
 
   const currentPlayerId = state.current_turn?.player.id ?? null;
 
+  // ✅ delta du dernier tour (clé string -> number)
+  const lastDeltaByPlayerId = state.last_round_delta?.delta ?? null;
+
   return (
     <div className={cn("rounded-lg border p-4", disabled ? "opacity-75" : null)}>
       <div className="mb-3 text-base font-semibold">Scores</div>
@@ -41,6 +44,22 @@ export function GameScoreboard({
           const clickable = !!targetingPlayer && !disabled;
 
           const isCurrentPlayer = p.id === currentPlayerId;
+
+          // ✅ delta du joueur (si présent)
+          const rawDelta = lastDeltaByPlayerId ? lastDeltaByPlayerId[String(p.id)] : undefined;
+          const delta = typeof rawDelta === "number" ? rawDelta : undefined;
+
+          const deltaLabel =
+            delta === undefined ? null : delta > 0 ? `+${delta}` : `${delta}`;
+
+          const deltaClass =
+            delta === undefined
+              ? ""
+              : delta > 0
+              ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300"
+              : delta < 0
+              ? "bg-red-500/15 text-red-700 dark:text-red-300"
+              : "bg-muted text-muted-foreground";
 
           return (
             <div
@@ -74,13 +93,9 @@ export function GameScoreboard({
                 hex
                   ? {
                       borderColor: hex,
-
                       ...(isCurrentPlayer
                         ? {
-                            // ring couleur joueur
                             ["--tw-ring-color" as any]: hex,
-
-                            // background très léger (60% environ)
                             backgroundColor: `${hex}99`,
                           }
                         : null),
@@ -96,7 +111,26 @@ export function GameScoreboard({
                 <div className="text-lg font-medium">{p.name}</div>
               </div>
 
-              <div className="text-lg font-bold tabular-nums">{points}</div>
+              <div className="flex items-center gap-2">
+                {/* ✅ delta */}
+                {deltaLabel ? (
+                  <span
+                    className={cn(
+                      "rounded-full px-2 py-0.5 text-xs font-semibold tabular-nums",
+                      deltaClass
+                    )}
+                    title={
+                      state.last_round_delta
+                        ? `Delta du tour ${state.last_round_delta.round_number}`
+                        : "Delta dernier tour"
+                    }
+                  >
+                    {deltaLabel}
+                  </span>
+                ) : null}
+
+                <div className="text-lg font-bold tabular-nums">{points}</div>
+              </div>
             </div>
           );
         })}
