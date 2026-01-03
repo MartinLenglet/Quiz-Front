@@ -24,6 +24,24 @@ function hexToRgba(hex: string, alpha: number) {
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
+function hexToShadow(hex: string, alpha: number) {
+  return `0 6px 14px ${hexToRgba(hex, alpha)}`;
+}
+
+// ✅ détecte si une couleur est "claire" (=> texte noir), sinon texte blanc
+function isLightHex(hex?: string) {
+  if (!hex) return false;
+  const clean = hex.replace("#", "");
+  const full = clean.length === 3 ? clean.split("").map((c) => c + c).join("") : clean;
+  const r = parseInt(full.slice(0, 2), 16) / 255;
+  const g = parseInt(full.slice(2, 4), 16) / 255;
+  const b = parseInt(full.slice(4, 6), 16) / 255;
+
+  // relative luminance
+  const lum = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  return lum > 0.3; // seuil "presque blanc"
+}
+
 export function GameGrid({
   state,
   colorByPlayerId,
@@ -60,6 +78,12 @@ export function GameGrid({
   const themeToPlayerId = new Map<number, number>();
   for (const p of state.players) themeToPlayerId.set(p.theme_id, p.id);
 
+  const playerNameById = React.useMemo(() => {
+    const m = new Map<number, string>();
+    for (const p of state.players) m.set(p.id, p.name);
+    return m;
+  }, [state.players]);
+
   const gridDisabled = !!interactionsDisabled;
 
   return (
@@ -84,44 +108,117 @@ export function GameGrid({
                   return <div key={`${row}-${col}`} className="rounded-md border bg-muted/30" />;
                 }
 
+                // couleur "de la case" (thème owner)
                 const ownerPlayerId = themeToPlayerId.get(cell.question.theme.id);
-                const playerHex = ownerPlayerId ? colorByPlayerId[ownerPlayerId] : undefined;
+                const ownerHex = ownerPlayerId ? colorByPlayerId[ownerPlayerId] : undefined;
+
+                // ✅ joueur qui a répondu (pour badge)
+                const answeredById = cell.player_id ?? null;
+                const answeredByHex = answeredById ? colorByPlayerId[answeredById] : undefined;
+                const answeredByName = answeredById ? playerNameById.get(answeredById) : undefined;
 
                 const isAnswered = cell.correct_answer || cell.skip_answer || !!cell.round_id;
-                const bg = playerHex ? hexToRgba(playerHex, 0.22) : undefined;
-                const border = playerHex ? hexToRgba(playerHex, 0.5) : undefined;
+
+                // ✅ fond plus opaque si non répondu (60%)
+                const bgAlpha = isAnswered ? 0.22 : 0.6;
+                const bg = ownerHex ? hexToRgba(ownerHex, bgAlpha) : undefined;
+                const border = ownerHex ? hexToRgba(ownerHex, 0.55) : undefined;
+                const baseShadow = ownerHex
+                  ? hexToShadow(ownerHex, isAnswered ? 0.18 : 0.28)
+                  : "0 4px 10px rgba(0,0,0,0.15)";
+
+                const hoverShadow = ownerHex
+                  ? hexToShadow(ownerHex, 0.45)
+                  : "0 8px 20px rgba(0,0,0,0.25)";
 
                 const isHovered = !!targetingMode && hoveredGridId === cell.grid_id;
 
-                return (
-                  <button
-                    key={`${row}-${col}`}
-                    type="button"
-                    onClick={() => onCellClick(cell)}
-                    disabled={isAnswered}
-                    onMouseEnter={() => onCellHover?.(cell)}
-                    onMouseLeave={() => onCellHover?.(null)}
-                    className={cn(
-                      "h-full w-full rounded-md border p-2 text-left transition",
-                      "hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-20",
-                      targetingMode ? "cursor-crosshair" : null,
-                      isHovered ? "ring-2 ring-offset-2" : null
-                    )}
-                    style={{ background: bg, borderColor: border }}
-                    title={cell.question.theme.name}
-                  >
-                    <div className="flex h-full flex-col justify-between">
-                      <div className="text-[10px] sm:text-xs text-muted-foreground line-clamp-2">
-                        {cell.question.theme.name}
-                      </div>
+                // ✅ texte blanc sauf si le fond (couleur) est très clair
+                const forceWhite = !!ownerHex && !isLightHex(ownerHex);
+                const forceBlack = !!ownerHex && isLightHex(ownerHex);
+                const textColorClass = forceWhite ? "text-white" : forceBlack ? "text-black" : "text-foreground";
+                const textMutedClass = forceWhite ? "text-white/90" : forceBlack ? "text-black/80" : "text-muted-foreground";
 
-                      <div className="flex items-end justify-between">
-                        <div className="text-lg sm:text-2xl font-bold">{cell.question.points}</div>
-                        {cell.correct_answer ? <div className="text-xs font-medium">✅</div> : null}
-                        {cell.skip_answer ? <div className="text-xs font-medium">⏭️</div> : null}
+                const hasBeenAnswered = !!cell.player_id || !!cell.round_id;
+
+                const statusIcon = cell.skip_answer
+                  ? "⏭️"
+                  : cell.correct_answer
+                  ? "✅"
+                  : hasBeenAnswered
+                  ? "❌"
+                  : null;
+
+                return (
+                  <div
+                    key={`${row}-${col}`}
+                    className="relative h-full w-full overflow-hidden rounded-md"
+                  >
+                    {/* ✅ Bandeau coin supérieur droit (clippé dans la case) */}
+                    {answeredById && answeredByName && statusIcon ? (
+                      <div className="pointer-events-none absolute right-0 top-0 z-20">
+                        <div
+                          className={cn(
+                            "absolute",
+                            // position “ruban” : on le décale vers la droite, mais il reste clippé
+                            "right-[-44px] top-[12px]",
+                            "w-[140px] rotate-45",
+                            "px-2 py-1",
+                            "text-[11px] font-semibold leading-none",
+                            "shadow-md"
+                          )}
+                          style={
+                            answeredByHex
+                              ? {
+                                  backgroundColor: hexToRgba(answeredByHex, 0.6),
+                                  color: isLightHex(answeredByHex) ? "black" : "white",
+                                }
+                              : undefined
+                          }
+                        >
+                          <div className="flex items-center justify-center gap-1">
+                            <span className="max-w-[96px] truncate">{answeredByName}</span>
+                            <span>{statusIcon}</span>
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  </button>
+                    ) : null}
+
+                    {/* ✅ Le bouton prend toute la place du wrapper */}
+                    <button
+                      type="button"
+                      onClick={() => onCellClick(cell)}
+                      disabled={isAnswered}
+                      onMouseEnter={() => onCellHover?.(cell)}
+                      onMouseLeave={() => onCellHover?.(null)}
+                      className={cn(
+                        "relative h-full w-full rounded-md border p-2 text-left transition-all duration-200",
+                        "hover:brightness-105",
+                        "shadow-sm hover:shadow-md",
+                        "disabled:cursor-not-allowed disabled:opacity-20 disabled:shadow-none",
+                        targetingMode ? "cursor-crosshair" : null,
+                        isHovered ? "ring-2 ring-offset-2 shadow-lg" : null
+                      )}
+                      style={{
+                        background: bg,
+                        borderColor: border,
+                        boxShadow: isHovered ? hoverShadow : baseShadow,
+                      }}
+                      title={cell.question.theme.name}
+                    >
+                      <div className="flex h-full flex-col justify-between">
+                        <div className={cn("text-[10px] sm:text-xs line-clamp-2", textMutedClass)}>
+                          {cell.question.theme.name}
+                        </div>
+
+                        <div className="flex items-end justify-between">
+                          <div className={cn("text-lg sm:text-2xl font-bold", textColorClass)}>
+                            {cell.question.points}
+                          </div>
+                        </div>
+                      </div>
+                    </button>
+                  </div>
                 );
               })
             )}

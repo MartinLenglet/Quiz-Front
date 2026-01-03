@@ -5,6 +5,8 @@ export const jokerPublicSchema = z.object({
   id: z.number().int(),
   name: z.string(),
   description: z.string(),
+  requires_target_player: z.boolean(),
+  requires_target_grid: z.boolean(),
 });
 export type JokerPublic = z.infer<typeof jokerPublicSchema>;
 
@@ -145,6 +147,7 @@ export const gridCellOutSchema = z.object({
   row: z.number().int(),
   column: z.number().int(),
   round_id: z.number().int().nullable(),
+  player_id: z.number().int().nullable(),
   correct_answer: z.boolean(),
   skip_answer: z.boolean(),
   question: questionInGridOutSchema,
@@ -183,16 +186,26 @@ export const bonusInGameOutSchema = z.object({
   }),
 });
 
+export const lastRoundDeltaOutSchema = z.object({
+  round_id: z.number().int(),
+  round_number: z.number().int(),
+  delta: z.record(z.string(), z.coerce.number().int()), // clés JSON => string
+});
+export type LastRoundDeltaOut = z.infer<typeof lastRoundDeltaOutSchema>;
+
 export const gameStateOutSchema = z.object({
   game: gameMetaOutSchema,
   players: z.array(gameStatePlayerSchema),
   grid: z.array(gridCellOutSchema),
   current_turn: currentTurnOutSchema.nullable(),
+
   available_jokers: z
     .record(z.string(), z.array(jokerAvailabilityOutSchema))
     .default({}),
   bonus: z.array(bonusInGameOutSchema).default([]),
+
   scores: z.record(z.string(), z.coerce.number().int()),
-  finished: z.boolean().optional().default(false),
+
+  last_round_delta: lastRoundDeltaOutSchema.nullable().optional(),
 });
 export type GameStateOut = z.infer<typeof gameStateOutSchema>;

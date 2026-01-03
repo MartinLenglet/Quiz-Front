@@ -80,8 +80,8 @@ export function GameScoreboard({
                             // ring couleur joueur
                             ["--tw-ring-color" as any]: hex,
 
-                            // background très léger (8% environ)
-                            backgroundColor: `${hex}14`,
+                            // background très léger (60% environ)
+                            backgroundColor: `${hex}99`,
                           }
                         : null),
                     }
@@ -93,7 +93,7 @@ export function GameScoreboard({
                   className="h-3 w-3 rounded-full border"
                   style={hex ? { backgroundColor: hex, borderColor: hex } : undefined}
                 />
-                <div className="font-medium">{p.name}</div>
+                <div className="text-lg font-medium">{p.name}</div>
               </div>
 
               <div className="text-lg font-bold tabular-nums">{points}</div>
