@@ -41,31 +41,51 @@ type Props = {
 };
 
 function MediaPanel({ media }: { media?: Media }) {
-  const hasAnything = Boolean(media?.imageUrl || media?.audioUrl || media?.videoUrl);
+  const hasAudio = !!media?.audioUrl;
+  const hasImage = !!media?.imageUrl;
+  const hasVideo = !!media?.videoUrl;
 
-  if (!hasAnything) {
-    return null;
-  }
+  const visualsCount = Number(hasImage) + Number(hasVideo);
+  const hasAnything = hasAudio || visualsCount > 0;
+
+  if (!hasAnything) return null;
 
   return (
-    <div className="flex flex-col items-center gap-4">
-      {media?.audioUrl ? (
-          <audio className="w-full max-w-md" controls src={media.audioUrl} />
-      ) : null}
-      {media?.imageUrl ? (
-          <img
-          src={media.imageUrl}
-          alt="Media image"
-          className="max-h-80 max-w-full rounded-md border"
-          />
+    <div className="w-full h-full min-h-0 flex flex-col gap-3">
+      {/* AUDIO (fixe) */}
+      {hasAudio ? (
+        <audio className="w-full shrink-0" controls src={media!.audioUrl!} />
       ) : null}
 
-      {media?.videoUrl ? (
-          <video
-          className="max-h-80 w-full max-w-xl rounded-md border"
-          controls
-          src={media.videoUrl}
-          />
+      {/* VISUELS : prennent TOUT le reste */}
+      {visualsCount > 0 ? (
+        <div
+          className={[
+            "flex-1 min-h-0 w-full",
+            "grid gap-3",
+            visualsCount === 2 ? "grid-rows-2" : "grid-rows-1",
+          ].join(" ")}
+        >
+          {hasImage ? (
+            <div className="relative min-h-0 overflow-hidden">
+              <img
+                src={media!.imageUrl!}
+                alt="Image"
+                className="absolute inset-0 h-full w-full object-contain"
+              />
+            </div>
+          ) : null}
+
+          {hasVideo ? (
+            <div className="relative min-h-0 overflow-hidden">
+              <video
+                className="absolute inset-0 h-full w-full object-contain"
+                controls
+                src={media!.videoUrl!}
+              />
+            </div>
+          ) : null}
+        </div>
       ) : null}
     </div>
   );
@@ -117,23 +137,36 @@ export function DisplayQuestionModal({
           </div>
 
           {/* ✅ placeholder "Tour de XXXX" au-dessus du thème */}
-          <div className="text-center text-lg font-semibold tracking-wide text-muted-foreground">
+          <div 
+          className="text-center font-semibold tracking-wide text-muted-foreground
+            text-base
+            md:text-lg
+            lg:text-xl"
+          >
             {turnLabel ?? "Tour de XXXX"}
           </div>
 
-          <DialogTitle className="text-xl text-center">
+          <DialogTitle className="text-xl text-center md:text-2xl lg:text-3xl">
             {themeTitle || "Thème"}
           </DialogTitle>
         </DialogHeader>
 
         {/* BODY (scrollable) */}
         <div className="flex-1 min-h-0 overflow-auto pr-1">
-          <div className="grid gap-6 md:grid-cols-2 items-stretch h-full min-h-full">
+          <div className="flex flex-col gap-6 md:grid md:grid-cols-2 md:items-stretch md:h-[60vh] min-h-0">
             {/* LEFT */}
-            <div className="space-y-4">
+            <div className="space-y-4 md:self-stretch min-h-0">
               <div className="space-y-2">
-                <div className="text-sm font-medium">Question</div>
-                <div className="rounded-md border p-3 text-sm whitespace-pre-wrap">
+                <div className="text-sm font-medium md:text-base lg:text-lg">Question</div>
+                <div
+                  className="
+                    rounded-md border
+                    p-3 text-sm leading-relaxed whitespace-pre-wrap
+                    md:p-4 md:text-base
+                    lg:p-5 lg:text-lg
+                    xl:p-6 xl:text-xl
+                  "
+                >
                   {questionText || <span className="text-muted-foreground">—</span>}
                 </div>
               </div>
@@ -142,8 +175,16 @@ export function DisplayQuestionModal({
                 <>
                   <Separator />
                   <div className="space-y-2">
-                    <div className="text-sm font-medium">Réponse</div>
-                    <div className="rounded-md border p-3 text-sm whitespace-pre-wrap">
+                    <div className="text-sm font-medium md:text-base lg:text-lg">Réponse</div>
+                    <div
+                      className="
+                        rounded-md border
+                        p-3 text-sm leading-relaxed whitespace-pre-wrap
+                        md:p-4 md:text-base
+                        lg:p-5 lg:text-lg
+                        xl:p-6 xl:text-xl
+                      "
+                    >
                       {answerText || <span className="text-muted-foreground">—</span>}
                     </div>
                   </div>
@@ -152,8 +193,16 @@ export function DisplayQuestionModal({
             </div>
 
             {/* RIGHT */}
-            <div className="h-full min-h-full flex items-center justify-center">
-                <MediaPanel media={rightMedia} />
+            <div
+              className="
+                min-h-0
+                overflow-hidden
+                flex items-center justify-center
+                h-[42vh] sm:h-[46vh]
+                md:h-full
+              "
+            >
+              <MediaPanel media={rightMedia} />
             </div>
           </div>
         </div>

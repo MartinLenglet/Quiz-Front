@@ -21,7 +21,7 @@ export function MyThemeCard({ theme, onEdit }: Props) {
             src={theme.image_signed_url}
             alt={`Illustration du thème ${theme.name}`}
             className="h-48 w-full object-cover"
-            loading="lazy"
+            // loading="lazy"
           />
         ) : (
           <div className="flex h-48 w-full items-center justify-center bg-muted text-sm text-muted-foreground">
