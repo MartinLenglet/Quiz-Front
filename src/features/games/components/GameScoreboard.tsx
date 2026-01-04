@@ -25,15 +25,34 @@ export function GameScoreboard({
   const sorted = state.players.slice().sort((a, b) => a.order - b.order);
 
   const disabled = !!interactionsDisabled;
-
   const currentPlayerId = state.current_turn?.player.id ?? null;
 
   // ✅ delta du dernier tour (clé string -> number)
   const lastDeltaByPlayerId = state.last_round_delta?.delta ?? null;
 
+  // ✅ Tour X/Y + dernier tour
+  const x = state.current_full_turn_number ?? 0;
+  const y = state.max_full_turns ?? 0;
+  const isLastFullTurn = y > 0 && x >= y;
+
   return (
     <div className={cn("rounded-lg border p-4", disabled ? "opacity-75" : null)}>
-      <div className="mb-3 text-base font-semibold">Scores</div>
+      {/* HEADER */}
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <div className="text-base font-semibold">Scores</div>
+
+        <div className="flex items-center gap-2">
+          <div className="text-xs font-medium text-muted-foreground tabular-nums">
+            Tour {x}/{y}
+          </div>
+
+          {isLastFullTurn ? (
+            <span className="rounded-full border px-2 py-0.5 text-[10px] font-bold tracking-wide">
+              DERNIER TOUR
+            </span>
+          ) : null}
+        </div>
+      </div>
 
       <div className={cn("space-y-2", disabled ? "pointer-events-none" : null)}>
         {sorted.map((p) => {
@@ -49,8 +68,7 @@ export function GameScoreboard({
           const rawDelta = lastDeltaByPlayerId ? lastDeltaByPlayerId[String(p.id)] : undefined;
           const delta = typeof rawDelta === "number" ? rawDelta : undefined;
 
-          const deltaLabel =
-            delta === undefined ? null : delta > 0 ? `+${delta}` : `${delta}`;
+          const deltaLabel = delta === undefined ? null : delta > 0 ? `+${delta}` : `${delta}`;
 
           const deltaClass =
             delta === undefined
@@ -82,11 +100,7 @@ export function GameScoreboard({
               className={cn(
                 "flex items-center justify-between rounded-md border px-3 py-2 transition",
                 clickable ? "cursor-pointer hover:brightness-105" : null,
-
-                // 🔵 Joueur dont c’est le tour
                 isCurrentPlayer ? "ring-2 ring-offset-2" : null,
-
-                // 🎯 Hover lors du ciblage joker (plus léger)
                 isHovered && !isCurrentPlayer ? "brightness-110" : null
               )}
               style={
@@ -115,10 +129,7 @@ export function GameScoreboard({
                 {/* ✅ delta */}
                 {deltaLabel ? (
                   <span
-                    className={cn(
-                      "rounded-full px-2 py-0.5 text-xs font-semibold tabular-nums",
-                      deltaClass
-                    )}
+                    className={cn("rounded-full px-2 py-0.5 text-xs font-semibold tabular-nums", deltaClass)}
                     title={
                       state.last_round_delta
                         ? `Delta du tour ${state.last_round_delta.round_number}`

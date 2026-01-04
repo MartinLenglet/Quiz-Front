@@ -207,5 +207,7 @@ export const gameStateOutSchema = z.object({
   scores: z.record(z.string(), z.coerce.number().int()),
 
   last_round_delta: lastRoundDeltaOutSchema.nullable().optional(),
+  max_full_turns: z.number().int(),
+  current_full_turn_number: z.number().int(),
 });
 export type GameStateOut = z.infer<typeof gameStateOutSchema>;
