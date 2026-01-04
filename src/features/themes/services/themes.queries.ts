@@ -37,6 +37,7 @@ export function useCategoriesQuery() {
       return res.items;
     },
     staleTime: 10 * 60 * 1000, // 10 min
+    placeholderData: (prev) => prev,
   });
 }
 
