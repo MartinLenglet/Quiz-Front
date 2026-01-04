@@ -283,11 +283,14 @@ export function UpdateThemeForm({
           const trimmedAnswer = q.answerText.trim();
           const isEmpty = trimmedQuestion.length === 0 && trimmedAnswer.length === 0;
 
+          const safePoints =
+            typeof q.points === "number" && Number.isFinite(q.points) ? Math.max(1, q.points) : 1;
+
           return {
             id: q.backendId, // keep if supported by backend
             question: trimmedQuestion,
             answer: trimmedAnswer,
-            points: Number.isFinite(q.points) ? q.points : 0,
+            points: safePoints,
 
             question_image_id: qImageId,
             answer_image_id: aImageId,
