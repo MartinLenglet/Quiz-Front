@@ -14,7 +14,7 @@ export type QuestionDraft = {
 
   questionText: string;
   answerText: string;
-  points: number;
+  points: number | null;
 
   questionImage?: File | null;
   questionAudio?: File | null;
@@ -149,10 +149,33 @@ export function UpdateThemeQuestion({
                 <Label>Points</Label>
                 <Input
                   type="number"
-                  min={0}
+                  min={1}
                   step={1}
-                  value={Number.isFinite(question.points) ? question.points : 0}
-                  onChange={(e) => onChange({ points: Number(e.target.value) })}
+                  inputMode="numeric"
+                  value={question.points ?? ""}
+                  onWheel={(e) => {
+                    // empêche la modification à la molette
+                    (e.currentTarget as HTMLInputElement).blur();
+                  }}
+                  onChange={(e) => {
+                    const raw = e.target.value;
+
+                    if (raw === "") {
+                      onChange({ points: null });
+                      return;
+                    }
+
+                    const n = Number(raw);
+                    if (Number.isFinite(n)) {
+                      onChange({ points: n });
+                    }
+                  }}
+                  onBlur={() => {
+                    // valeur par défaut si vide
+                    if (question.points == null) {
+                      onChange({ points: 1 });
+                    }
+                  }}
                 />
               </div>
             </div>
@@ -277,7 +300,7 @@ export function UpdateThemeQuestion({
         open={previewOpen}
         onOpenChange={setPreviewOpen}
         themeTitle={themeTitle}
-        points={question.points}
+        points={question.points ?? 1}
         questionText={question.questionText}
         answerText={question.answerText}
         questionMedia={{

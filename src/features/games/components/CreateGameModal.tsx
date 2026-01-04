@@ -379,7 +379,7 @@ export function CreateGameModal({ open, onOpenChange, onCreated }: Props) {
                 Suggérer les réglages
               </Button>
               <p className="text-sm text-muted-foreground">
-                Basé sur les thèmes des joueurs (unique par joueur).
+                Basé sur les thèmes des joueurs.
               </p>
             </div>
 
@@ -435,7 +435,7 @@ export function CreateGameModal({ open, onOpenChange, onCreated }: Props) {
                         values={generalThemeIds}
                         onChange={setGeneralThemeIds}
                         options={generalThemesOptions}
-                        placeholder="Choisir 1+ thème(s)…"
+                        placeholder="Choisir au moins un thème…"
                         disabled={createMutation.isPending}
                       />
                     </div>
@@ -478,13 +478,13 @@ export function CreateGameModal({ open, onOpenChange, onCreated }: Props) {
                           variant="secondary"
                           onClick={() => setSeed(randomSeed())}
                         >
-                          Random
+                          Aléatoire
                         </Button>
                       </div>
                     </div>
 
                     <p className="text-xs text-muted-foreground">
-                      Rappel : le backend attend au moins 1 thème “culture générale”.
+                      Rappel : il faut au moins 1 thème “culture générale”.
                     </p>
                   </div>
                 </AccordionContent>
