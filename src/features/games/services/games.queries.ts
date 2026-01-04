@@ -8,7 +8,8 @@ import {
   suggestSetup,
   getGameState,
   useJoker,
-  answerQuestion
+  answerQuestion,
+  getGameResults,
 } from "./games.services";
 
 export const gamesKeys = {
@@ -19,6 +20,7 @@ export const gamesKeys = {
   colors: (params: { offset: number; limit: number }) => [...gamesKeys.all, "colors", params] as const,
   suggest: () => [...gamesKeys.all, "suggest-setup"] as const,
   state: (gameUrl: string) => [...gamesKeys.all, "state", gameUrl] as const,
+  results: (gameUrl: string) => [...gamesKeys.all, "results", gameUrl] as const,
 };
 
 export function useMyGamesQuery() {
@@ -84,6 +86,7 @@ export function useUseJokerMutation(gameUrl: string) {
     mutationFn: (payload: unknown) => useJoker(gameUrl, payload),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: gamesKeys.state(gameUrl) });
+      qc.invalidateQueries({ queryKey: gamesKeys.results(gameUrl) });
     },
   });
 }
@@ -95,6 +98,18 @@ export function useAnswerQuestionMutation(gameUrl: string) {
       answerQuestion(gameUrl, args.payload, { auto_next_round: args.auto_next_round }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: gamesKeys.state(gameUrl) });
+      qc.invalidateQueries({ queryKey: gamesKeys.results(gameUrl) });
     },
+  });
+}
+
+export function useGameResultsQuery(gameUrl: string | undefined) {
+  return useQuery({
+    queryKey: gameUrl ? gamesKeys.results(gameUrl) : ["games", "results", "missing"],
+    queryFn: () => getGameResults(gameUrl as string),
+    enabled: !!gameUrl,
+    refetchOnWindowFocus: false,
+    staleTime: 30_000,
+    retry: 1,
   });
 }

@@ -89,6 +89,11 @@ npm install react-router-dom
 npm install @tanstack/react-query
 ```
 
+## Add recharts (graph)
+```
+npm install recharts
+```
+
 ## Run dev mode
 
 ```

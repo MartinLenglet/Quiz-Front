@@ -9,9 +9,17 @@ type Props = {
   isError: boolean;
   errorMessage?: string;
   onContinue: (gameUrl: string) => void;
+  onResults: (gameUrl: string) => void;
 };
 
-export function MyGamesTable({ games, isLoading, isError, errorMessage, onContinue }: Props) {
+export function MyGamesTable({
+  games,
+  isLoading,
+  isError,
+  errorMessage,
+  onContinue,
+  onResults,
+}: Props) {
   if (isLoading) {
     return (
       <Card>
@@ -42,7 +50,7 @@ export function MyGamesTable({ games, isLoading, isError, errorMessage, onContin
               <TableHead>Grille</TableHead>
               <TableHead>État</TableHead>
               <TableHead>Joueurs</TableHead>
-              <TableHead className="text-right">Action</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
 
@@ -73,10 +81,17 @@ export function MyGamesTable({ games, isLoading, isError, errorMessage, onContin
                         ))}
                     </div>
                   </TableCell>
+
                   <TableCell className="text-right">
-                    <Button onClick={() => onContinue(g.url)} disabled={g.finished}>
-                      Continuer
-                    </Button>
+                    <div className="inline-flex items-center justify-end gap-2">
+                      <Button onClick={() => onContinue(g.url)} disabled={g.finished}>
+                        Continuer
+                      </Button>
+
+                      <Button onClick={() => onResults(g.url)} disabled={!g.finished}>
+                        Résultats
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))

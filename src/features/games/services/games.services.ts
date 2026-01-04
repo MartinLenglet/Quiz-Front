@@ -10,6 +10,7 @@ import {
   gameWithPlayersOutSchema,
   jokerPublicSchema,
   gameStateOutSchema,
+  gameResultsOutSchema,
 } from "../schemas/games.schemas";
 
 const listSchema = <T extends z.ZodTypeAny>(item: T) => z.array(item);
@@ -126,5 +127,13 @@ export function answerQuestion(
     params: { auto_next_round: params?.auto_next_round ?? true },
     body: payload,
     responseSchema: answerCreateOutSchema,
+  });
+}
+
+export function getGameResults(gameUrl: string) {
+  return httpRequest({
+    method: "GET",
+    path: `/games/${encodeURIComponent(gameUrl)}/results`,
+    responseSchema: gameResultsOutSchema,
   });
 }

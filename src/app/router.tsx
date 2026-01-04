@@ -9,6 +9,7 @@ import SignUpPage from "@/pages/SignUpPage"
 import AccountPage from "@/pages/AccountPage"
 import MyThemesPage from "@/pages/MyThemesPage";
 import UpdateThemePage from "@/pages/UpdateThemePage";
+import GameResultsPage from "@/pages/GameResultsPage";
 
 import { ProtectedRoute } from "@/features/auth"
 import { ThemeOwnerRoute } from "@/features/themes/components/ThemeOwnerRoute";
@@ -35,6 +36,7 @@ export default function AppRoutes() {
 
         <Route path="/my-games" element={<MyGamesPage />} />
         <Route path="/games/:gameUrl" element={<GamePage />} />
+        <Route path="/games/:gameUrl/results" element={<GameResultsPage />} />
 
         {/* Owner-only
         <Route element={<GameOwnerRoute redirectTo="/my-games" />}>

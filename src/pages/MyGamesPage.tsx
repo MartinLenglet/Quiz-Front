@@ -32,7 +32,6 @@ export default function MyGamesPage() {
         open={isCreateOpen}
         onOpenChange={setIsCreateOpen}
         onCreated={(game) => {
-          // refetch (déjà invalidé par le mutation hook, mais on garde “dans l’esprit” de MyThemesPage)
           myGamesQuery.refetch();
           navigate(`/games/${game.url}`);
         }}
@@ -45,6 +44,7 @@ export default function MyGamesPage() {
           isError={isError}
           errorMessage={error instanceof Error ? error.message : undefined}
           onContinue={(gameUrl) => navigate(`/games/${gameUrl}`)}
+          onResults={(gameUrl) => navigate(`/games/${gameUrl}/results`)}
         />
       </div>
     </div>

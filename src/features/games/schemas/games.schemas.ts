@@ -211,3 +211,77 @@ export const gameStateOutSchema = z.object({
   current_full_turn_number: z.number().int(),
 });
 export type GameStateOut = z.infer<typeof gameStateOutSchema>;
+
+/** -------- Game results -------- */
+
+export const playerResultOutSchema = z.object({
+  id: z.number().int(),
+  name: z.string(),
+  order: z.number().int(),
+  theme: themeOutSchema,
+  color: colorOutSchema,
+});
+export type PlayerResultOut = z.infer<typeof playerResultOutSchema>;
+
+export const turnScoreOutSchema = z.object({
+  turn_number: z.number().int(),
+  scores: z.record(z.string(), z.coerce.number().int()),
+  delta: z.record(z.string(), z.coerce.number().int()),
+});
+export type TurnScoreOut = z.infer<typeof turnScoreOutSchema>;
+
+export const jokerImpactOutSchema = z.object({
+  usage_id: z.number().int(),
+  turn_number: z.number().int(),
+  round_id: z.number().int(),
+  round_number: z.number().int(),
+  using_player_id: z.number().int(),
+  joker_in_game_id: z.number().int(),
+  joker_id: z.number().int(),
+  joker_name: z.string(),
+  target_player_id: z.number().int().nullable().optional(),
+  target_grid_id: z.number().int().nullable().optional(),
+  points_delta_by_player: z.record(z.string(), z.coerce.number().int()),
+});
+export type JokerImpactOut = z.infer<typeof jokerImpactOutSchema>;
+
+export const bonusRankingItemOutSchema = z.object({
+  rank: z.number().int(),
+  player_id: z.number().int(),
+  value: z.number().int(),
+});
+export type BonusRankingItemOut = z.infer<typeof bonusRankingItemOutSchema>;
+
+export const bonusComputedEffectOutSchema = z.object({
+  key: z.string(),
+  metric_by_player: z.record(z.string(), z.coerce.number().int()),
+  ranking: z.array(bonusRankingItemOutSchema),
+  points_delta_by_player: z.record(z.string(), z.coerce.number().int()),
+});
+export type BonusComputedEffectOut = z.infer<typeof bonusComputedEffectOutSchema>;
+
+export const bonusEffectOutSchema = z.object({
+  bonus_in_game_id: z.number().int(),
+  bonus: z.object({
+    id: z.number().int(),
+    name: z.string(),
+    description: z.string(),
+  }),
+  effect: bonusComputedEffectOutSchema.nullable().optional(),
+  points_delta_by_player: z.record(z.string(), z.coerce.number().int()).default({}),
+});
+export type BonusEffectOut = z.infer<typeof bonusEffectOutSchema>;
+
+export const gameResultsOutSchema = z.object({
+  game: gameMetaOutSchema,
+  players: z.array(playerResultOutSchema),
+
+  scores: z.record(z.string(), z.coerce.number().int()),
+  scores_with_bonus: z.record(z.string(), z.coerce.number().int()),
+
+  turn_scores: z.array(turnScoreOutSchema),
+  jokers_impacts: z.array(jokerImpactOutSchema),
+
+  bonus: z.array(bonusEffectOutSchema),
+});
+export type GameResultsOut = z.infer<typeof gameResultsOutSchema>;

@@ -1,9 +1,11 @@
-import { useMemo, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useMemo, useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+
 import {
   useAnswerQuestionMutation,
   useColorsPublicQuery,
@@ -11,8 +13,9 @@ import {
   useUseJokerMutation,
 } from "@/features/games/services/games.queries";
 import { useQuestionByIdQuery } from "@/features/questions/services/questions.queries";
-import type { GridCellOut, GameStateOut } from "@/features/games/schemas/games.schemas";
 import { questionsKeys } from "@/features/questions/services/questions.queries";
+
+import type { GridCellOut, GameStateOut } from "@/features/games/schemas/games.schemas";
 
 import { GameTurnHeader } from "@/features/games/components/GameTurnHeader";
 import { GameGrid } from "@/features/games/components/GameGrid";
@@ -49,6 +52,7 @@ function computeNextStep(s: Exclude<JokerSelectionState, { step: "idle" }>): Jok
 
 export default function GamePage() {
   const { gameUrl } = useParams<{ gameUrl: string }>();
+  const navigate = useNavigate();
 
   const stateQuery = useGameStateQuery(gameUrl);
   const colorsQuery = useColorsPublicQuery({ offset: 0, limit: 500 });
@@ -63,6 +67,11 @@ export default function GamePage() {
 
   // ✅ loader global "action en cours"
   const [uiBusyLabel, setUiBusyLabel] = useState<string | null>(null);
+  const [gameFinishedOpen, setGameFinishedOpen] = useState(false);
+
+  useEffect(() => {
+    if (stateData?.game?.finished) setGameFinishedOpen(true);
+  }, [stateData?.game?.finished]);
 
   const jokerTargeting = isSelectingJoker(jokerSel);
 
@@ -379,6 +388,7 @@ export default function GamePage() {
               interactionsDisabled={disableAll || (jokerTargeting && jokerSel.step === "pickPlayer")}
               onCellClick={(cell) => {
                 if (disableAll) return;
+                if (state.game.finished) return;
 
                 if (jokerTargeting) {
                   if (jokerSel.step === "pickGrid") handleTargetGrid(cell);
@@ -402,6 +412,44 @@ export default function GamePage() {
           />
         </div>
       </div>
+
+      {/* ✅ Modale fin de partie */}
+      <Dialog
+        open={gameFinishedOpen && !!state.game.finished}
+        onOpenChange={(open) => {
+          // Empêche la fermeture manuelle (escape / click outside)
+          // Tant que la partie est finie, on force l'utilisateur à choisir une action
+          if (open) setGameFinishedOpen(true);
+        }}
+      >
+        <DialogContent
+          className="sm:max-w-lg"
+          onInteractOutside={(e) => e.preventDefault()}
+          onEscapeKeyDown={(e) => e.preventDefault()}
+        >
+          <DialogHeader>
+            <DialogTitle className="text-center text-xl">Partie terminée 🎉</DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-3 text-center">
+            <div className="text-sm text-muted-foreground">
+              La partie est finie. Tu peux maintenant consulter les résultats.
+            </div>
+
+            <div className="flex justify-center gap-2">
+              <Button
+                type="button"
+                onClick={() => {
+                  if (!gameUrl) return;
+                  navigate(`/games/${gameUrl}/results`);
+                }}
+              >
+                Voir les résultats
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <DisplayQuestionModal
         open={!!selectedCell && !jokerTargeting}
