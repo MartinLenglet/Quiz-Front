@@ -53,6 +53,7 @@ export const gameWithPlayersOutSchema = z.object({
   rows_number: z.number().int(),
   columns_number: z.number().int(),
   finished: z.boolean(),
+  with_pawns: z.boolean(),
   players: z.array(playerInGameOutSchema),
 });
 export type GameWithPlayersOut = z.infer<typeof gameWithPlayersOutSchema>;
@@ -73,6 +74,7 @@ export const gameCreateInSchema = z.object({
   general_theme_ids: z.array(z.number().int()).min(1),
   joker_ids: z.array(z.number().int()).optional().nullable(),
   bonus_ids: z.array(z.number().int()).optional().nullable(),
+  with_pawns: z.boolean().default(false),
 });
 export type GameCreateIn = z.infer<typeof gameCreateInSchema>;
 
@@ -83,6 +85,7 @@ export const gameCreateOutSchema = z.object({
   rows_number: z.number().int(),
   columns_number: z.number().int(),
   finished: z.boolean(),
+  with_pawns: z.boolean(),
 });
 export type GameCreateOut = z.infer<typeof gameCreateOutSchema>;
 
@@ -121,6 +124,7 @@ export const gameMetaOutSchema = z.object({
   rows_number: z.number().int(),
   columns_number: z.number().int(),
   finished: z.boolean(),
+  with_pawns: z.boolean(),
   owner_id: z.number().int(),
 });
 
@@ -130,6 +134,8 @@ export const gameStatePlayerSchema = z.object({
   order: z.number().int(),
   theme_id: z.number().int(),
   color_id: z.number().int(),
+  pawn_row: z.number().int().nullable(),
+  pawn_col: z.number().int().nullable(),
 });
 export type GameStatePlayer = z.infer<typeof gameStatePlayerSchema>;
 

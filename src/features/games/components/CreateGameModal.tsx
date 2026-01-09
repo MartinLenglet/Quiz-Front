@@ -26,6 +26,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 
 import { ThemeCombobox } from "./ThemeCombobox";
 import { MultiSelectCombobox } from "./MultiSelectCombobox";
@@ -92,6 +93,8 @@ export function CreateGameModal({ open, onOpenChange, onCreated }: Props) {
   const [generalThemeIds, setGeneralThemeIds] = useState<number[]>([]);
   const [jokerIds, setJokerIds] = useState<number[]>([]);
   const [bonusIds, setBonusIds] = useState<number[]>([]);
+
+  const [withPawns, setWithPawns] = useState<boolean>(false);
 
   // Queries catalogues
   const colorsQuery = useColorsPublicQuery({ offset: 0, limit: 500 });
@@ -206,6 +209,7 @@ export function CreateGameModal({ open, onOpenChange, onCreated }: Props) {
     setGeneralThemeIds(res.general_theme_ids);
     setJokerIds(res.joker_ids);
     setBonusIds(res.bonus_ids);
+    setWithPawns(false);
   }
 
   async function handleCreate() {
@@ -224,6 +228,7 @@ export function CreateGameModal({ open, onOpenChange, onCreated }: Props) {
       general_theme_ids: generalThemeIds,
       joker_ids: jokerIds.length ? jokerIds : null,
       bonus_ids: bonusIds.length ? bonusIds : null,
+      with_pawns: withPawns,
     };
 
     const created = await createMutation.mutateAsync(payload);
@@ -461,6 +466,21 @@ export function CreateGameModal({ open, onOpenChange, onCreated }: Props) {
                           placeholder="Ajouter des bonus…"
                           disabled={createMutation.isPending}
                         />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Mode de jeu</Label>
+                      <div className="flex items-center gap-2">
+                        <Checkbox
+                          id="with-pawns"
+                          checked={withPawns}
+                          onCheckedChange={(checked) => setWithPawns(checked === true)}
+                          disabled={createMutation.isPending}
+                        />
+                        <Label htmlFor="with-pawns" className="cursor-pointer font-normal">
+                          Avec des pions
+                        </Label>
                       </div>
                     </div>
 

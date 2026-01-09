@@ -1,7 +1,7 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 import { useElementSize } from "@/lib/useElementSize";
-import type { GridCellOut, GameStateOut } from "@/features/games/schemas/games.schemas";
+import type { GridCellOut, GameStateOut, GameStatePlayer } from "@/features/games/schemas/games.schemas";
 
 type Props = {
   state: GameStateOut;
@@ -14,6 +14,59 @@ type Props = {
 
   interactionsDisabled?: boolean;
 };
+
+function isEdgeCell(row: number, col: number, rows: number, cols: number): boolean {
+  return row === 0 || row === rows - 1 || col === 0 || col === cols - 1;
+}
+
+function getValidPawnMoves(
+  player: GameStatePlayer,
+  rows: number,
+  cols: number,
+  answeredCells: Set<string>,
+  otherPawnPositions: Set<string>
+): Set<string> {
+  const valid = new Set<string>();
+  const pawnRow = player.pawn_row;
+  const pawnCol = player.pawn_col;
+
+  if (pawnRow === null || pawnCol === null) {
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        if (isEdgeCell(r, c, rows, cols)) {
+          const key = `${r}:${c}`;
+          if (!answeredCells.has(key) && !otherPawnPositions.has(key)) {
+            valid.add(key);
+          }
+        }
+      }
+    }
+  } else {
+    const directions = [
+      [-1, -1], [-1, 0], [-1, 1],
+      [0, -1],          [0, 1],
+      [1, -1],  [1, 0], [1, 1],
+    ];
+    for (const [dr, dc] of directions) {
+      let nr = pawnRow + dr;
+      let nc = pawnCol + dc;
+      while (nr >= 0 && nr < rows && nc >= 0 && nc < cols) {
+        const key = `${nr}:${nc}`;
+        if (otherPawnPositions.has(key)) {
+          break;
+        }
+        if (!answeredCells.has(key)) {
+          valid.add(key);
+          break;
+        }
+        nr += dr;
+        nc += dc;
+      }
+    }
+  }
+
+  return valid;
+}
 
 function hexToRgba(hex: string, alpha: number) {
   const clean = hex.replace("#", "");
@@ -84,6 +137,46 @@ export function GameGrid({
     return m;
   }, [state.players]);
 
+  const withPawns = state.game.with_pawns;
+  const currentPlayerId = state.current_turn?.player.id ?? null;
+
+  const pawnPositionsByCell = React.useMemo(() => {
+    const m = new Map<string, GameStatePlayer[]>();
+    if (!withPawns) return m;
+    for (const p of state.players) {
+      if (p.pawn_row !== null && p.pawn_col !== null) {
+        const key = `${p.pawn_row}:${p.pawn_col}`;
+        const arr = m.get(key) ?? [];
+        arr.push(p);
+        m.set(key, arr);
+      }
+    }
+    return m;
+  }, [state.players, withPawns]);
+
+  const validMoves = React.useMemo(() => {
+    if (!withPawns || !currentPlayerId) return new Set<string>();
+
+    const currentPlayer = state.players.find((p) => p.id === currentPlayerId);
+    if (!currentPlayer) return new Set<string>();
+
+    const answeredCells = new Set<string>();
+    for (const cell of state.grid) {
+      if (cell.round_id !== null) {
+        answeredCells.add(`${cell.row}:${cell.column}`);
+      }
+    }
+
+    const otherPawnPositions = new Set<string>();
+    for (const p of state.players) {
+      if (p.id !== currentPlayerId && p.pawn_row !== null && p.pawn_col !== null) {
+        otherPawnPositions.add(`${p.pawn_row}:${p.pawn_col}`);
+      }
+    }
+
+    return getValidPawnMoves(currentPlayer, rows, cols, answeredCells, otherPawnPositions);
+  }, [withPawns, currentPlayerId, state.players, state.grid, rows, cols]);
+
   const gridDisabled = !!interactionsDisabled;
 
   return (
@@ -149,11 +242,33 @@ export function GameGrid({
                   ? "❌"
                   : null;
 
+                const cellKey = `${row}:${col}`;
+                const pawnsOnCell = pawnPositionsByCell.get(cellKey) ?? [];
+                const isValidMove = withPawns ? validMoves.has(cellKey) : true;
+                const isPawnModeDisabled = withPawns && !isValidMove && !isAnswered;
+
                 return (
                   <div
                     key={`${row}-${col}`}
                     className="relative h-full w-full overflow-hidden rounded-md"
                   >
+                    {/* ✅ Pawn indicators */}
+                    {withPawns && pawnsOnCell.length > 0 ? (
+                      <div className="pointer-events-none absolute left-1 top-1 z-30 flex gap-0.5">
+                        {pawnsOnCell.map((p) => {
+                          const pawnHex = colorByPlayerId[p.id];
+                          return (
+                            <div
+                              key={p.id}
+                              className="h-4 w-4 rounded-full border-2 border-white shadow-md"
+                              style={{ backgroundColor: pawnHex ?? "#888" }}
+                              title={p.name}
+                            />
+                          );
+                        })}
+                      </div>
+                    ) : null}
+
                     {/* ✅ Bandeau coin supérieur droit (clippé dans la case) */}
                     {answeredById && answeredByName && statusIcon ? (
                       <div className="pointer-events-none absolute right-0 top-0 z-20">
@@ -188,7 +303,7 @@ export function GameGrid({
                     <button
                       type="button"
                       onClick={() => onCellClick(cell)}
-                      disabled={isAnswered}
+                      disabled={isAnswered || isPawnModeDisabled}
                       onMouseEnter={() => onCellHover?.(cell)}
                       onMouseLeave={() => onCellHover?.(null)}
                       className={cn(
@@ -197,7 +312,8 @@ export function GameGrid({
                         "shadow-sm hover:shadow-md",
                         "disabled:cursor-not-allowed disabled:opacity-20 disabled:shadow-none disabled:hover:scale-100",
                         targetingMode ? "cursor-crosshair" : null,
-                        isHovered ? "ring-2 ring-offset-2 shadow-lg" : null
+                        isHovered ? "ring-2 ring-offset-2 shadow-lg" : null,
+                        withPawns && isValidMove && !isAnswered ? "ring-2 ring-green-500/50" : null
                       )}
                       style={{
                         background: bg,
