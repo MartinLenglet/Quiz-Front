@@ -193,9 +193,9 @@ export function GameGrid({
                       onMouseLeave={() => onCellHover?.(null)}
                       className={cn(
                         "relative h-full w-full rounded-md border p-2 text-left transition-all duration-200",
-                        "hover:brightness-105",
+                        "hover:brightness-105 hover:scale-125",
                         "shadow-sm hover:shadow-md",
-                        "disabled:cursor-not-allowed disabled:opacity-20 disabled:shadow-none",
+                        "disabled:cursor-not-allowed disabled:opacity-20 disabled:shadow-none disabled:hover:scale-100",
                         targetingMode ? "cursor-crosshair" : null,
                         isHovered ? "ring-2 ring-offset-2 shadow-lg" : null
                       )}
@@ -206,15 +206,12 @@ export function GameGrid({
                       }}
                       title={cell.question.theme.name}
                     >
-                      <div className="flex h-full flex-col justify-between">
-                        <div className={cn("text-[10px] sm:text-xs line-clamp-2", textMutedClass)}>
+                      <div className="flex h-full flex-col items-center justify-center gap-1">
+                        <div className={cn("text-[10px] sm:text-xs line-clamp-2 text-center", textMutedClass)}>
                           {cell.question.theme.name}
                         </div>
-
-                        <div className="flex items-end justify-between">
-                          <div className={cn("text-lg sm:text-2xl font-bold", textColorClass)}>
-                            {cell.question.points}
-                          </div>
+                        <div className={cn("text-lg sm:text-2xl font-bold", textColorClass)}>
+                          {cell.question.points}
                         </div>
                       </div>
                     </button>
