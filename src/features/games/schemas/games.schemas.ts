@@ -136,6 +136,7 @@ export const gameStatePlayerSchema = z.object({
   color_id: z.number().int(),
   pawn_row: z.number().int().nullable(),
   pawn_col: z.number().int().nullable(),
+  allowed_steps: z.number().int().default(1),
 });
 export type GameStatePlayer = z.infer<typeof gameStatePlayerSchema>;
 
