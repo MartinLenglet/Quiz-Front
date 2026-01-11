@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { createTheme } from "./themes.services";
-import { listPublicThemes, type ListPublicThemesParams, listMyThemes, type ListMyThemesParams, getThemeCategories, getThemeById, updateThemeWithQuestions, type ThemeUpdateWithQuestionsIn } from "./themes.services";
-import type { ThemeOut, ThemeCreateIn, ThemeCategory, ThemeDetailJoinWithSignedUrlOut } from "../schemas/themes.schemas";
+import { listPublicThemes, type ListPublicThemesParams, listMyThemes, type ListMyThemesParams, getThemeCategories, getThemeById, updateThemeWithQuestions, type ThemeUpdateWithQuestionsIn, getThemePreview } from "./themes.services";
+import type { ThemeOut, ThemeCreateIn, ThemeCategory, ThemeDetailJoinWithSignedUrlOut, ThemePreviewOut } from "../schemas/themes.schemas";
 
 export function usePublicThemes(params: ListPublicThemesParams) {
   return useQuery({
@@ -47,6 +47,18 @@ export function useThemeByIdQuery(themeId: number | null) {
     queryFn: async () => {
       if (!themeId) throw new Error("themeId manquant");
       return getThemeById(themeId, { with_signed_url: true });
+    },
+    enabled: typeof themeId === "number" && Number.isFinite(themeId),
+    staleTime: 30 * 1000,
+  });
+}
+
+export function useThemePreviewQuery(themeId: number | null) {
+  return useQuery<ThemePreviewOut, Error>({
+    queryKey: ["themes", "preview", themeId],
+    queryFn: async () => {
+      if (!themeId) throw new Error("themeId manquant");
+      return getThemePreview(themeId);
     },
     enabled: typeof themeId === "number" && Number.isFinite(themeId),
     staleTime: 30 * 1000,

@@ -2,9 +2,10 @@ import * as React from "react";
 import { usePublicThemes } from "@/features/themes/services/themes.queries";
 import type { ThemeWithSignedUrlOut } from "@/features/themes/schemas/themes.schemas";
 import { NetflixSections, type CategorySection } from "@/features/themes/components/NetflixSections";
+import { ThemePreviewModal } from "@/features/themes/components/ThemePreviewModal";
 import type { RowItem } from "@/features/themes/components/CategoryRow";
 
-function buildSections(themes: ThemeWithSignedUrlOut[]): CategorySection[] {
+function buildSections(themes: ThemeWithSignedUrlOut[], onItemClick: (themeId: number) => void): CategorySection[] {
   const map = new Map<number, ThemeWithSignedUrlOut[]>();
 
   for (const t of themes) {
@@ -30,7 +31,7 @@ function buildSections(themes: ThemeWithSignedUrlOut[]): CategorySection[] {
       subtitle: t.description ?? null,
       imageUrl: t.image_signed_url ?? null,
       ownerName: t.owner_username ?? null,
-      onClick: () => console.log("click theme", t.id),
+      onClick: () => onItemClick(t.id),
     }));
 
     return {
@@ -49,9 +50,17 @@ export default function HomePage() {
     with_signed_url: true, // pour afficher les images
   });
 
+  const [selectedThemeId, setSelectedThemeId] = React.useState<number | null>(null);
+  const [previewOpen, setPreviewOpen] = React.useState(false);
+
+  const onItemClick = React.useCallback((themeId: number) => {
+    setSelectedThemeId(themeId);
+    setPreviewOpen(true);
+  }, []);
+
   const sections = React.useMemo(
-    () => (data ? buildSections(data) : []),
-    [data]
+    () => (data ? buildSections(data, onItemClick) : []),
+    [data, onItemClick]
   );
 
   if (isLoading) return <div className="p-6">Chargement…</div>;
@@ -60,6 +69,15 @@ export default function HomePage() {
   return (
     <div className="p-6">
       <NetflixSections sections={sections} />
+
+      <ThemePreviewModal
+        themeId={selectedThemeId}
+        open={previewOpen}
+        onClose={() => {
+          setPreviewOpen(false);
+          setSelectedThemeId(null);
+        }}
+      />
     </div>
   );
 }

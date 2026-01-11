@@ -30,6 +30,12 @@ export function LargeDialogContent({
         // ✅ Hauteur confortable + scroll géré dans le contenu
         "h-[88vh] max-h-[920px] overflow-hidden",
 
+        // autorise les enfants du grid à shrink (évite les débordements horizontaux)
+        "min-w-0",
+
+        // ✅ IMPORTANT: ne plus centrer verticalement
+        "!top-6 sm:!top-10 !translate-y-0",
+
         className
       )}
     />

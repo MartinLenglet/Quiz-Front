@@ -32,7 +32,22 @@ export const ThemeWithSignedUrlOutSchema = ThemeOutSchema.extend({
 
 export type ThemeWithSignedUrlOut = z.infer<typeof ThemeWithSignedUrlOutSchema>;
 
-export const ThemeDetailJoinWithSignedUrlOutSchema = ThemeWithSignedUrlOutSchema.extend({
+// Schéma pour les objets "join" renvoyés par certaines routes (ex: list public)
+export const ThemeJoinOutSchema = ThemeOutSchema.extend({
+  category_name: z.string().optional().nullable(),
+  category_color_hex: z.string().optional().nullable(),
+  owner_username: z.string().optional().nullable(),
+  questions_count: z.number().int().optional().default(0),
+});
+
+export const ThemeJoinWithSignedUrlOutSchema = ThemeJoinOutSchema.extend({
+  image_signed_url: z.string().optional().nullable(),
+  image_signed_expires_in: z.number().optional().nullable(),
+});
+
+export type ThemeJoinWithSignedUrlOut = z.infer<typeof ThemeJoinWithSignedUrlOutSchema>;
+
+export const ThemeDetailJoinWithSignedUrlOutSchema = ThemeJoinWithSignedUrlOutSchema.extend({
   questions: z.array(QuestionJoinWithSignedUrlOutSchema).default([]),
 });
 
@@ -67,3 +82,21 @@ export const ThemeCategoriesResponseSchema = z.object({
 });
 
 export type ThemeCategoriesResponse = z.infer<typeof ThemeCategoriesResponseSchema>;
+
+// Le backend peut renvoyer des structures variées pour l'endpoint "preview".
+// Plutôt que d'imposer un contrat précis ici (qui diverge souvent), on accepte
+// n'importe quel payload et on le traite côté UI de façon permissive.
+export const QuestionStatOutSchema = z.object({
+  question_id: z.number(),
+  points: z.number().optional().default(0),
+  positive_answers_count: z.number().optional().default(0),
+  negative_answers_count: z.number().optional().default(0),
+  cancelled_answers_count: z.number().optional().default(0),
+});
+
+export const ThemePreviewSchema = ThemeJoinWithSignedUrlOutSchema.extend({
+  plays_count: z.number().int().optional().default(0),
+  question_stats: QuestionStatOutSchema.array().optional().default([]),
+});
+
+export type ThemePreviewOut = z.infer<typeof ThemePreviewSchema>;

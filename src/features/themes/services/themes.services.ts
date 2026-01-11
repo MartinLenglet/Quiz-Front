@@ -1,8 +1,8 @@
 import { httpRequest } from "@/lib/api";
-import { ThemeWithSignedUrlOutSchema, ThemeOutSchema, ThemeDetailJoinWithSignedUrlOutSchema, type ThemeOut, type ThemeCreateIn, type ThemeDetailJoinWithSignedUrlOut} from "../schemas/themes.schemas";
-import { 
+import { ThemeWithSignedUrlOutSchema, ThemeOutSchema, ThemeDetailJoinWithSignedUrlOutSchema, type ThemeOut, type ThemeCreateIn, type ThemeDetailJoinWithSignedUrlOut, ThemePreviewSchema, ThemeJoinWithSignedUrlOutSchema } from "../schemas/themes.schemas";
+import {
   ThemeCategoriesResponseSchema,
-  type ThemeCategoriesResponse, 
+  type ThemeCategoriesResponse,
 } from "../schemas/themes.schemas";
 
 export type ListPublicThemesParams = {
@@ -21,7 +21,8 @@ export function listPublicThemes(params: ListPublicThemesParams) {
     method: "GET",
     path: "/themes/public",
     params,
-    responseSchema: ThemeWithSignedUrlOutSchema.array(),
+    // backend returns joined objects with category/owner for public list
+    responseSchema: ThemeJoinWithSignedUrlOutSchema.array(),
     withAuth: false,
   });
 }
@@ -53,7 +54,8 @@ export function listMyThemes(params: ListMyThemesParams) {
       newest_first: params.newest_first ?? true,
       with_signed_url: params.with_signed_url ?? true,
     },
-    responseSchema: ThemeWithSignedUrlOutSchema.array(),
+    // owner list also returns joined objects
+    responseSchema: ThemeJoinWithSignedUrlOutSchema.array(),
     // withAuth: true (défaut) -> Bearer si présent + refresh auto si 401
   });
 }
@@ -86,6 +88,15 @@ export async function getThemeById(themeId: number, params?: { with_signed_url?:
       with_signed_url: params?.with_signed_url ?? true,
     },
     responseSchema: ThemeDetailJoinWithSignedUrlOutSchema,
+  });
+}
+
+export async function getThemePreview(themeId: number) {
+  return httpRequest<import("../schemas/themes.schemas").ThemePreviewOut>({
+    method: "GET",
+    path: `/themes/${themeId}/preview`,
+    withAuth: false,
+    responseSchema: ThemePreviewSchema,
   });
 }
 
