@@ -2,6 +2,8 @@ import * as React from "react";
 import { Dialog, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { LargeDialogContent } from "@/components/custom/large-dialog";
 import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
 import {
   BarChart,
   Bar,
@@ -41,6 +43,32 @@ function useResizeObserver<T extends HTMLElement>() {
   }, [node]);
 
   return { ref, rect };
+}
+
+/** Format date to readable string (e.g., "23 Jan" or "il y a 2 jours") */
+function formatCommentDate(dateStr: string | null | undefined): string {
+  if (!dateStr) return "—";
+
+  try {
+    const date = new Date(dateStr);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+    if (diffDays === 0) {
+      const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+      if (diffHours < 1) return "à l'instant";
+      if (diffHours === 1) return "il y a 1 heure";
+      return `il y a ${diffHours} heures`;
+    }
+
+    if (diffDays === 1) return "hier";
+    if (diffDays < 7) return `il y a ${diffDays} jours`;
+
+    return date.toLocaleDateString("fr-FR", { day: "numeric", month: "short" });
+  } catch {
+    return "—";
+  }
 }
 
 export function ThemePreviewModal({
@@ -310,6 +338,53 @@ export function ThemePreviewModal({
                   ) : (
                     <div className="mt-2 text-sm text-muted-foreground">
                       Aucune statistique disponible (questions ignorées ou non jouées)
+                    </div>
+                  )}
+                </div>
+
+                {/* Commentaires */}
+                <Separator className="my-2" />
+
+                <div className="min-w-0">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="text-sm text-muted-foreground">Avis utilisateurs</div>
+                    {data?.score_count ? (
+                      <div className="text-sm font-medium">
+                        {data.score_avg.toFixed(1)}/5⭐ ({data.score_count})
+                      </div>
+                    ) : null}
+                  </div>
+
+                  {data?.comments?.items && data.comments.items.length > 0 ? (
+                    <ScrollArea className="h-64 w-full rounded-lg border bg-muted/30 p-3">
+                      <div className="space-y-3">
+                        {data.comments.items.map((comment: any) => (
+                          <div key={comment.id} className="pb-3 border-b last:border-b-0">
+                            <div className="flex items-start justify-between gap-2 mb-1">
+                              <div className="flex items-center gap-2 min-w-0 flex-1">
+                                <span className="text-sm font-medium truncate">
+                                  {comment.game_owner_username ?? "Anonyme"}
+                                </span>
+                                <span className="text-xs text-muted-foreground flex-shrink-0">
+                                  {formatCommentDate(comment.created_at)}
+                                </span>
+                              </div>
+                              <span className="text-sm font-medium flex-shrink-0">
+                                {comment.score}/5⭐
+                              </span>
+                            </div>
+                            {comment.comment && (
+                              <p className="text-sm text-muted-foreground break-words">
+                                {comment.comment}
+                              </p>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </ScrollArea>
+                  ) : (
+                    <div className="p-3 bg-muted/30 rounded-lg text-sm text-muted-foreground text-center">
+                      Aucun commentaire
                     </div>
                   )}
                 </div>

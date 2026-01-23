@@ -94,9 +94,33 @@ export const QuestionStatOutSchema = z.object({
   cancelled_answers_count: z.number().optional().default(0),
 });
 
+export const ThemeCommentOutSchema = z.object({
+  id: z.number(),
+  game_id: z.number(),
+  theme_id: z.number(),
+  score: z.number().int().min(0).max(5),
+  comment: z.string().optional().nullable(),
+  created_at: z.string().optional().nullable(), // datetime JSON -> string
+  updated_at: z.string().optional().nullable(),
+  game_owner_id: z.number(),
+  game_owner_username: z.string().optional().nullable(),
+});
+
+export type ThemeCommentOut = z.infer<typeof ThemeCommentOutSchema>;
+
+export const ThemeCommentListOutSchema = z.object({
+  items: ThemeCommentOutSchema.array(),
+  total: z.number().int(),
+});
+
+export type ThemeCommentListOut = z.infer<typeof ThemeCommentListOutSchema>;
+
 export const ThemePreviewSchema = ThemeJoinWithSignedUrlOutSchema.extend({
   plays_count: z.number().int().optional().default(0),
   question_stats: QuestionStatOutSchema.array().optional().default([]),
+  comments: ThemeCommentListOutSchema.optional().default({ items: [], total: 0 }),
+  score_avg: z.number().optional().default(0),
+  score_count: z.number().int().optional().default(0),
 });
 
 export type ThemePreviewOut = z.infer<typeof ThemePreviewSchema>;
