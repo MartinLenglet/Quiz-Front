@@ -1,5 +1,14 @@
 import { httpRequest } from "@/lib/api";
-import { ThemeWithSignedUrlOutSchema, ThemeOutSchema, ThemeDetailJoinWithSignedUrlOutSchema, type ThemeOut, type ThemeCreateIn, type ThemeDetailJoinWithSignedUrlOut, ThemePreviewSchema, ThemeJoinWithSignedUrlOutSchema } from "../schemas/themes.schemas";
+import {
+  ThemeOutSchema,
+  ThemeDetailJoinWithSignedUrlOutSchema,
+  ThemePreviewSchema,
+  ThemeJoinWithSignedUrlOutSchema,
+  type ThemeOut,
+  type ThemeCreateIn,
+  type ThemeDetailJoinWithSignedUrlOut,
+  type ThemePreviewOut,
+} from "../schemas/themes.schemas";
 import {
   ThemeCategoriesResponseSchema,
   type ThemeCategoriesResponse,
@@ -91,10 +100,17 @@ export async function getThemeById(themeId: number, params?: { with_signed_url?:
   });
 }
 
-export async function getThemePreview(themeId: number) {
-  return httpRequest<import("../schemas/themes.schemas").ThemePreviewOut>({
+export async function getThemePreview(
+  themeId: number,
+  params?: { comments_offset?: number; comments_limit?: number }
+) {
+  return httpRequest<ThemePreviewOut>({
     method: "GET",
     path: `/themes/${themeId}/preview`,
+    params: {
+      comments_offset: params?.comments_offset ?? 0,
+      comments_limit: params?.comments_limit ?? 50,
+    },
     withAuth: false,
     responseSchema: ThemePreviewSchema,
   });

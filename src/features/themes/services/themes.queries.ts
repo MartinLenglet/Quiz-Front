@@ -1,7 +1,23 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { createTheme } from "./themes.services";
-import { listPublicThemes, type ListPublicThemesParams, listMyThemes, type ListMyThemesParams, getThemeCategories, getThemeById, updateThemeWithQuestions, type ThemeUpdateWithQuestionsIn, getThemePreview } from "./themes.services";
-import type { ThemeOut, ThemeCreateIn, ThemeCategory, ThemeDetailJoinWithSignedUrlOut, ThemePreviewOut } from "../schemas/themes.schemas";
+import {
+  listPublicThemes,
+  type ListPublicThemesParams,
+  listMyThemes,
+  type ListMyThemesParams,
+  getThemeCategories,
+  getThemeById,
+  updateThemeWithQuestions,
+  type ThemeUpdateWithQuestionsIn,
+  getThemePreview,
+} from "./themes.services";
+import type {
+  ThemeOut,
+  ThemeCreateIn,
+  ThemeCategory,
+  ThemeDetailJoinWithSignedUrlOut,
+  ThemePreviewOut,
+} from "../schemas/themes.schemas";
 
 export function usePublicThemes(params: ListPublicThemesParams) {
   return useQuery({
@@ -53,12 +69,20 @@ export function useThemeByIdQuery(themeId: number | null) {
   });
 }
 
-export function useThemePreviewQuery(themeId: number | null) {
+export function useThemePreviewQuery(
+  themeId: number | null,
+  params?: { comments_offset?: number; comments_limit?: number }
+) {
+  const effective = {
+    comments_offset: params?.comments_offset ?? 0,
+    comments_limit: params?.comments_limit ?? 50,
+  };
+
   return useQuery<ThemePreviewOut, Error>({
-    queryKey: ["themes", "preview", themeId],
+    queryKey: ["themes", "preview", themeId, effective],
     queryFn: async () => {
       if (!themeId) throw new Error("themeId manquant");
-      return getThemePreview(themeId);
+      return getThemePreview(themeId, effective);
     },
     enabled: typeof themeId === "number" && Number.isFinite(themeId),
     staleTime: 30 * 1000,

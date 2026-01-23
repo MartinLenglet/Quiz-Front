@@ -8,7 +8,7 @@ import { ResultsScoreTimelineChart, type TimelinePoint } from "@/features/games/
 import { ResultsLeaderboard } from "@/features/games/components/ResultsLeaderboard";
 import { ResultsBonusTimeline } from "@/features/games/components/ResultsBonusTimeline";
 import { ResultsBonusMetricsTable } from "@/features/games/components/ResultsBonusMetricsTable";
-import { ResultsThemeRatingPlaceholder } from "@/features/games/components/ResultsThemeRating";
+import { ResultsThemeRating } from "@/features/games/components/ResultsThemeRating";
 
 export default function GameResultsPage() {
   const { gameUrl } = useParams<{ gameUrl: string }>();
@@ -79,6 +79,19 @@ export default function GameResultsPage() {
     return [baseline, ...turns, ...bonusSteps];
     }, [r, players]);
 
+  const themeOptions = useMemo(() => {
+    if (!r) return [] as { id: number; name: string }[];
+
+    const map = new Map<number, string>();
+    for (const player of r.players) {
+      if (!map.has(player.theme.id)) {
+        map.set(player.theme.id, player.theme.name);
+      }
+    }
+
+    return Array.from(map.entries()).map(([id, name]) => ({ id, name }));
+  }, [r]);
+
   if (resultsQuery.isLoading) {
     return (
       <div className="p-6 sm:p-8 lg:p-12">
@@ -123,11 +136,12 @@ export default function GameResultsPage() {
             players={players}
             bonus={r.bonus ?? []}
             />
-
-          {/* Mobile: placeholder notation thèmes ensuite */}
-          <ResultsThemeRatingPlaceholder />
-
           <ResultsBonusMetricsTable players={players} bonus={r.bonus ?? []} />
+
+          {/* Commentaires sur les thèmes */}
+          {r?.game?.id ? (
+            <ResultsThemeRating gameId={r.game.id} themes={themeOptions} />
+          ) : null}
         </div>
 
         {/* Desktop sidebar */}
