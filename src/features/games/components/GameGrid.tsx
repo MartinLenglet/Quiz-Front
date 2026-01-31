@@ -1,7 +1,7 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 import { useElementSize } from "@/lib/useElementSize";
-import type { GridCellOut, GameStateOut } from "@/features/games/schemas/games.schemas";
+import type { GridCellOut, GameStateOut, GameStatePlayer } from "@/features/games/schemas/games.schemas";
 
 type Props = {
   state: GameStateOut;
@@ -14,6 +14,95 @@ type Props = {
 
   interactionsDisabled?: boolean;
 };
+
+function isEdgeCell(row: number, col: number, rows: number, cols: number): boolean {
+  return row === 0 || row === rows - 1 || col === 0 || col === cols - 1;
+}
+
+function getValidPawnMoves(
+  player: GameStatePlayer,
+  rows: number,
+  cols: number,
+  answeredCells: Set<string>,
+  otherPawnPositions: Set<string>
+): Set<string> {
+  const valid = new Set<string>();
+  const pawnRow = player.pawn_row;
+  const pawnCol = player.pawn_col;
+  const allowedSteps = player.allowed_steps ?? 1;
+
+  if (pawnRow === null || pawnCol === null) {
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        if (isEdgeCell(r, c, rows, cols)) {
+          const key = `${r}:${c}`;
+          if (!answeredCells.has(key) && !otherPawnPositions.has(key)) {
+            valid.add(key);
+          }
+        }
+      }
+    }
+  } else {
+    const directions = [
+      [-1, -1], [-1, 0], [-1, 1],
+      [0, -1],          [0, 1],
+      [1, -1],  [1, 0], [1, 1],
+    ];
+
+    for (const [dr, dc] of directions) {
+      let stepsUsed = 0;
+      let nr = pawnRow + dr;
+      let nc = pawnCol + dc;
+
+      while (nr >= 0 && nr < rows && nc >= 0 && nc < cols) {
+        const key = `${nr}:${nc}`;
+        const hasOtherPawn = otherPawnPositions.has(key);
+        const isAnswered = answeredCells.has(key);
+
+        const isFree = isAnswered || hasOtherPawn;
+        const stepCost = isFree ? 0 : 1;
+        stepsUsed += stepCost;
+
+        if (stepsUsed > allowedSteps) break;
+
+        if (!isFree) {
+          valid.add(key);
+        }
+
+        nr += dr;
+        nc += dc;
+      }
+    }
+
+    // Fallback 1: if no moves, allow any unanswered edge cell
+    if (valid.size === 0) {
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          if (isEdgeCell(r, c, rows, cols)) {
+            const key = `${r}:${c}`;
+            if (!answeredCells.has(key) && !otherPawnPositions.has(key)) {
+              valid.add(key);
+            }
+          }
+        }
+      }
+    }
+
+    // Fallback 2: if still no moves, allow any unanswered cell
+    if (valid.size === 0) {
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          const key = `${r}:${c}`;
+          if (!answeredCells.has(key) && !otherPawnPositions.has(key)) {
+            valid.add(key);
+          }
+        }
+      }
+    }
+  }
+
+  return valid;
+}
 
 function hexToRgba(hex: string, alpha: number) {
   const clean = hex.replace("#", "");
@@ -84,6 +173,60 @@ export function GameGrid({
     return m;
   }, [state.players]);
 
+  const withPawns = state.game.with_pawns;
+  const currentPlayerId = state.current_turn?.player.id ?? null;
+
+  const pawnPositionsByCell = React.useMemo(() => {
+    const m = new Map<string, GameStatePlayer[]>();
+    if (!withPawns) return m;
+    for (const p of state.players) {
+      if (p.pawn_row !== null && p.pawn_col !== null) {
+        const key = `${p.pawn_row}:${p.pawn_col}`;
+        const arr = m.get(key) ?? [];
+        arr.push(p);
+        m.set(key, arr);
+      }
+    }
+    return m;
+  }, [state.players, withPawns]);
+
+  const currentPlayerPawnCell = React.useMemo(() => {
+    if (!withPawns || !currentPlayerId) return null;
+    const currentPlayer = state.players.find((p) => p.id === currentPlayerId);
+    if (!currentPlayer || currentPlayer.pawn_row === null || currentPlayer.pawn_col === null) {
+      return null;
+    }
+    return `${currentPlayer.pawn_row}:${currentPlayer.pawn_col}`;
+  }, [withPawns, currentPlayerId, state.players]);
+
+  const currentPlayerHex = React.useMemo(() => {
+    if (!currentPlayerId) return null;
+    return colorByPlayerId[currentPlayerId] ?? null;
+  }, [currentPlayerId, colorByPlayerId]);
+
+  const validMoves = React.useMemo(() => {
+    if (!withPawns || !currentPlayerId) return new Set<string>();
+
+    const currentPlayer = state.players.find((p) => p.id === currentPlayerId);
+    if (!currentPlayer) return new Set<string>();
+
+    const answeredCells = new Set<string>();
+    for (const cell of state.grid) {
+      if (cell.round_id !== null) {
+        answeredCells.add(`${cell.row}:${cell.column}`);
+      }
+    }
+
+    const otherPawnPositions = new Set<string>();
+    for (const p of state.players) {
+      if (p.id !== currentPlayerId && p.pawn_row !== null && p.pawn_col !== null) {
+        otherPawnPositions.add(`${p.pawn_row}:${p.pawn_col}`);
+      }
+    }
+
+    return getValidPawnMoves(currentPlayer, rows, cols, answeredCells, otherPawnPositions);
+  }, [withPawns, currentPlayerId, state.players, state.grid, rows, cols]);
+
   const gridDisabled = !!interactionsDisabled;
 
   return (
@@ -149,11 +292,45 @@ export function GameGrid({
                   ? "❌"
                   : null;
 
+                const cellKey = `${row}:${col}`;
+                const pawnsOnCell = pawnPositionsByCell.get(cellKey) ?? [];
+                const isValidMove = withPawns ? validMoves.has(cellKey) : true;
+                const isPawnModeDisabled = withPawns && !isValidMove && !isAnswered;
+                const isCurrentPlayerPawnCell = cellKey === currentPlayerPawnCell;
+
                 return (
                   <div
                     key={`${row}-${col}`}
                     className="relative h-full w-full overflow-hidden rounded-md"
                   >
+                    {/* ✅ Current player pawn highlight frame */}
+                    {isCurrentPlayerPawnCell && currentPlayerHex && (
+                      <div
+                        className="pointer-events-none absolute inset-0 z-40 rounded-md border-4"
+                        style={{
+                          borderColor: currentPlayerHex,
+                          boxShadow: `0 0 12px ${hexToRgba(currentPlayerHex, 0.6)}, inset 0 0 8px ${hexToRgba(currentPlayerHex, 0.3)}`,
+                        }}
+                      />
+                    )}
+
+                    {/* ✅ Pawn indicators */}
+                    {withPawns && pawnsOnCell.length > 0 ? (
+                      <div className="pointer-events-none absolute bottom-5 left-1/2 z-30 flex -translate-x-1/2 gap-1">
+                        {pawnsOnCell.map((p) => {
+                          const pawnHex = colorByPlayerId[p.id];
+                          return (
+                            <div
+                              key={p.id}
+                              className="h-8 w-8 rounded-full border-2 border-white shadow-md"
+                              style={{ backgroundColor: pawnHex ?? "#888" }}
+                              title={p.name}
+                            />
+                          );
+                        })}
+                      </div>
+                    ) : null}
+
                     {/* ✅ Bandeau coin supérieur droit (clippé dans la case) */}
                     {answeredById && answeredByName && statusIcon ? (
                       <div className="pointer-events-none absolute right-0 top-0 z-20">
@@ -188,16 +365,17 @@ export function GameGrid({
                     <button
                       type="button"
                       onClick={() => onCellClick(cell)}
-                      disabled={isAnswered}
+                      disabled={isAnswered || isPawnModeDisabled}
                       onMouseEnter={() => onCellHover?.(cell)}
                       onMouseLeave={() => onCellHover?.(null)}
                       className={cn(
                         "relative h-full w-full rounded-md border p-2 text-left transition-all duration-200",
-                        "hover:brightness-105",
+                        "hover:brightness-105 hover:scale-125",
                         "shadow-sm hover:shadow-md",
-                        "disabled:cursor-not-allowed disabled:opacity-20 disabled:shadow-none",
+                        "disabled:cursor-not-allowed disabled:opacity-20 disabled:shadow-none disabled:hover:scale-100",
                         targetingMode ? "cursor-crosshair" : null,
-                        isHovered ? "ring-2 ring-offset-2 shadow-lg" : null
+                        isHovered ? "ring-2 ring-offset-2 shadow-lg" : null,
+                        withPawns && isValidMove && !isAnswered ? "ring-2 ring-green-500/50" : null
                       )}
                       style={{
                         background: bg,
@@ -206,15 +384,12 @@ export function GameGrid({
                       }}
                       title={cell.question.theme.name}
                     >
-                      <div className="flex h-full flex-col justify-between">
-                        <div className={cn("text-[10px] sm:text-xs line-clamp-2", textMutedClass)}>
+                      <div className="flex h-full flex-col items-center justify-center gap-1">
+                        <div className={cn("text-[10px] sm:text-xs line-clamp-2 text-center", textMutedClass)}>
                           {cell.question.theme.name}
                         </div>
-
-                        <div className="flex items-end justify-between">
-                          <div className={cn("text-lg sm:text-2xl font-bold", textColorClass)}>
-                            {cell.question.points}
-                          </div>
+                        <div className={cn("text-lg sm:text-2xl font-bold", textColorClass)}>
+                          {cell.question.points}
                         </div>
                       </div>
                     </button>
