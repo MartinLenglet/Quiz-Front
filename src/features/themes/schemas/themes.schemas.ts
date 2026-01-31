@@ -48,6 +48,9 @@ export const ThemeJoinOutSchema = ThemeOutSchema.extend({
 export const ThemeJoinWithSignedUrlOutSchema = ThemeJoinOutSchema.extend({
   image_signed_url: z.string().optional().nullable(),
   image_signed_expires_in: z.number().optional().nullable(),
+  score_avg: z.number().optional().nullable(),
+  score_count: z.number().int().optional().default(0),
+  plays_count: z.number().int().optional().default(0),
 });
 
 export type ThemeJoinWithSignedUrlOut = z.infer<typeof ThemeJoinWithSignedUrlOutSchema>;
@@ -100,11 +103,8 @@ export const QuestionStatOutSchema = z.object({
 });
 
 export const ThemePreviewSchema = ThemeJoinWithSignedUrlOutSchema.extend({
-  plays_count: z.number().int().optional().default(0),
   question_stats: QuestionStatOutSchema.array().optional().default([]),
   comments: ThemeCommentListOutSchema.optional().default({ items: [], total: 0 }),
-  score_avg: z.number().optional().default(0),
-  score_count: z.number().int().optional().default(0),
 });
 
 export type { ThemeCommentOut, ThemeCommentListOut };

@@ -348,9 +348,9 @@ export function ThemePreviewModal({
                 <div className="min-w-0">
                   <div className="flex items-center justify-between mb-3">
                     <div className="text-sm text-muted-foreground">Avis utilisateurs</div>
-                    {data?.score_count ? (
+                    {data?.score_count && data.score_count > 0 ? (
                       <div className="text-sm font-medium">
-                        {data.score_avg.toFixed(1)}/5⭐ ({data.score_count})
+                        {(data.score_avg ?? 0).toFixed(1)}/5⭐ ({data.score_count})
                       </div>
                     ) : null}
                   </div>

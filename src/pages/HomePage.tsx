@@ -1,12 +1,12 @@
 import * as React from "react";
 import { usePublicThemes } from "@/features/themes/services/themes.queries";
-import type { ThemeWithSignedUrlOut } from "@/features/themes/schemas/themes.schemas";
+import type { ThemeJoinWithSignedUrlOut } from "@/features/themes/schemas/themes.schemas";
 import { NetflixSections, type CategorySection } from "@/features/themes/components/NetflixSections";
 import { ThemePreviewModal } from "@/features/themes/components/ThemePreviewModal";
 import type { RowItem } from "@/features/themes/components/CategoryRow";
 
-function buildSections(themes: ThemeWithSignedUrlOut[], onItemClick: (themeId: number) => void): CategorySection[] {
-  const map = new Map<number, ThemeWithSignedUrlOut[]>();
+function buildSections(themes: ThemeJoinWithSignedUrlOut[], onItemClick: (themeId: number) => void): CategorySection[] {
+  const map = new Map<number, ThemeJoinWithSignedUrlOut[]>();
 
   for (const t of themes) {
     const catId = t.category_id ?? 0;
@@ -31,6 +31,8 @@ function buildSections(themes: ThemeWithSignedUrlOut[], onItemClick: (themeId: n
       subtitle: t.description ?? null,
       imageUrl: t.image_signed_url ?? null,
       ownerName: t.owner_username ?? null,
+      scoreAvg: t.score_avg,
+      scoreCount: t.score_count,
       onClick: () => onItemClick(t.id),
     }));
 

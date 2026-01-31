@@ -9,6 +9,8 @@ export type RowItem = {
   imageUrl?: string | null;
   subtitle?: string | null;
   ownerName?: string | null;
+  scoreAvg?: number | null;
+  scoreCount?: number;
   onClick?: () => void;
 };
 
@@ -73,7 +75,14 @@ export function CategoryRow({ title, items }: { title: string; items: RowItem[] 
               <CardContent className="px-3 pb-2 pt-2 flex-1 flex flex-col min-h-0">
                 {/* Title + description */}
                 <div className="min-h-0">
-                  <div className="line-clamp-1 font-medium leading-tight">{item.title}</div>
+                  <div className="flex items-center gap-2 min-w-0">
+                    <div className="line-clamp-1 font-medium leading-tight flex-1 min-w-0">{item.title}</div>
+                    {item.scoreCount && item.scoreCount > 0 ? (
+                      <div className="text-xs font-medium flex-shrink-0">
+                        ⭐{(item.scoreAvg ?? 0).toFixed(1)}
+                      </div>
+                    ) : null}
+                  </div>
 
                   {item.subtitle ? (
                     <p className="mt-1 line-clamp-2 text-sm text-muted-foreground leading-snug">
