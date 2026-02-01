@@ -156,7 +156,9 @@ export function ResultsThemeRating({
           <div className="space-y-3">
             <div className="flex items-center gap-2 text-sm">
               <span className="font-medium">Commentaires</span>
-              {typeof previewQuery.data.score_count === "number" && previewQuery.data.score_count > 0 ? (
+              {typeof previewQuery.data.score_avg === "number" &&
+              typeof previewQuery.data.score_count === "number" &&
+              previewQuery.data.score_count > 0 ? (
                 <span className="text-muted-foreground">
                   {previewQuery.data.score_avg.toFixed(1)}/5 ⭐ ({previewQuery.data.score_count})
                 </span>
